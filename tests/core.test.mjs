@@ -125,12 +125,29 @@ test('cuatro dificultades de COM generan movimientos cardinales legales',()=>{
   }
 });
 
-test('COM experto prioriza el power-up cercano y la dificultad no cambia la velocidad base',()=>{
+test('COM experto conserva su estrategia de prioridad a los power-ups',()=>{
   const b=create({size:30});
   b.players[1].x=10;b.players[1].y=10;
   b.players[1].dx=1;b.players[1].dy=0;
   b.pickups.push({id:1,x:11,y:10,type:'bomba'});
   assert.deepEqual(chooseComputerDirection(b,'experto',{},()=>0),[1,0]);
-  assert.equal(b.movementInterval(2),40);
   assert.throws(()=>chooseComputerDirection(b,'imposible'),/Dificultad desconocida/);
+});
+
+test('COM utiliza 10, 15, 20 y 25 celdas/s según dificultad; sin alterar J1 ni PvP',()=>{
+  const speeds = {principiante:10, normal:15, dificil:20, experto:25};
+  for (const [difficulty, speed] of Object.entries(speeds)) {
+    assert.equal(DIFFICULTIES[difficulty].cellsPerSecond, speed);
+    const b = create({againstComputer:true, difficulty});
+    assert.equal(b.movementInterval(1),40);
+    assert.ok(Math.abs(b.movementInterval(2)-(1000/speed))<1e-9);
+    b.activate(2,'promedio');
+    assert.ok(Math.abs(b.movementInterval(2)-(500/speed))<1e-9);
+    b.advance(6.1);
+    assert.ok(Math.abs(b.movementInterval(2)-(1000/speed))<1e-9);
+  }
+  const pvp = create({difficulty:'principiante'});
+  assert.equal(pvp.movementInterval(1),40);
+  assert.equal(pvp.movementInterval(2),40);
+  assert.throws(()=>create({againstComputer:true,difficulty:'imposible'}),/Dificultad desconocida/);
 });
