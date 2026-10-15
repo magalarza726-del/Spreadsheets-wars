@@ -1,8 +1,21 @@
 /** Spreadsheet Wars: deterministic, DOM-free battle rules (ES module). */
-export const MODES = Object.freeze({
-  bala: { label: 'Bala', size: 20, seconds: 60 },
-  blitz: { label: 'Blitz', size: 30, seconds: 120 },
-  rapida: { label: 'Rápida', size: 60, seconds: 180 }
+export const MAPS = Object.freeze({
+  pequeno: { label: 'Pequeño', size: 30 },
+  mediano: { label: 'Mediano', size: 50 },
+  grande: { label: 'Grande', size: 70 }
+});
+
+export const DURATIONS = Object.freeze({
+  bala: {label: 'Bala', seconds: 60},
+  blitz: {label: 'Blitz', seconds: 120},
+  rapida: {label: 'Rápida', seconds: 180}
+});
+
+export const DIFFICULTIES = Object.freeze({
+  principiante: {label: 'Principiante', description: 'Explora sin un plan fijo y deja oportunidades libres.'},
+  normal: {label: 'Normal', description: 'Busca casillas disponibles y recoge poderes cercanos.'},
+  dificil: {label: 'Difícil', description: 'Persigue objetivos valiosos y disputa tu territorio.'},
+  experto: {label: 'Experto', description: 'Evalúa regiones, rutas y power-ups de forma agresiva.'}
 });
 
 export const POWERUPS = Object.freeze({
@@ -82,7 +95,7 @@ export class SpreadsheetBattle {
     return Math.max(0, (this.players[playerId - 1].effects[type] ?? 0) - this.elapsed);
   }
 
-  movementInterval(playerId) { return this.hasEffect(playerId, 'promedio') ? 50 : 100; }
+  movementInterval(playerId) { return this.hasEffect(playerId, 'promedio') ? 20 : 40; }
 
   paintingOwner(playerId) {
     return this.hasEffect(3 - playerId, 'concatenar') ? 3 - playerId : playerId;
@@ -206,4 +219,67 @@ export class SpreadsheetBattle {
   get remaining() { return Math.max(0, this.seconds - this.elapsed); }
   get percentages() { const total = this.size * this.size; return this.counts.map(value => value * 100 / total); }
   drainEvents() { return this.events.splice(0); }
+}
+
+/** Decisions are pure with respect to the board. Pass a per-match memory object to avoid repeated paths. */
+export function chooseComputerDirection(game, level = 'normal', memory = {}, random = Math.random) {
+  if (!DIFFICULTIES[level]) throw new Error('Dificultad desconocida');
+  const cpu = game.players[1];
+  const options = [[1,0],[-1,0],[0,1],[0,-1]]
+    .filter(([dx,dy]) => game.inBounds(cpu.x + dx, cpu.y + dy));
+  if (options.length === 0) return [0,0];
+  const rand = () => Math.min(0.999999, Math.max(0, random()));
+  if (!memory.visits || memory.visits.length !== game.size * game.size) {
+    memory.visits = new Uint16Array(game.size * game.size);
+  }
+  const visit = (x,y) => memory.visits[y * game.size + x];
+  const nonOwned = (x,y) => game.at(x,y) === 1 ? 2 : game.at(x,y) === 0 ? 1 : 0;
+  const reverse = ([dx,dy]) => dx === -cpu.dx && dy === -cpu.dy;
+  if (level === 'principiante' && rand() < 0.65) {
+    const viable = options.filter(d => !reverse(d));
+    const candidates = viable.length ? viable : options;
+    return candidates[Math.floor(rand() * candidates.length)];
+  }
+
+  // Target selection ranges from nearby uncovered cells to region-aware scoring.
+  let target = null, best = -Infinity;
+  const pickupWeight = {principiante: 2, normal: 12, dificil: 27, experto: 42}[level];
+  const clusterWeight = {principiante: 0, normal: 0.12, dificil: 0.5, experto: 1.1}[level];
+  const visitWeight = {principiante: 0.05, normal: 0.2, dificil: 0.5, experto: 0.8}[level];
+  const range = {principiante: 5, normal: 14, dificil: 24, experto: game.size * 2}[level];
+  const pickupAt = new Set(game.pickups.map(p => p.y * game.size + p.x));
+
+  for (let y = 0; y < game.size; y++) for (let x = 0; x < game.size; x++) {
+    const dist = Math.abs(x-cpu.x) + Math.abs(y-cpu.y);
+    if (dist === 0 || dist > range) continue;
+    const power = pickupAt.has(y*game.size+x);
+    const ownGain = nonOwned(x,y);
+    if (!ownGain && !power) continue;
+    let nearby = 0;
+    if (clusterWeight) {
+      for (let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) {
+        if ((ox || oy) && game.inBounds(x+ox,y+oy)) nearby += nonOwned(x+ox,y+oy);
+      }
+    }
+    const value = ownGain * 3 + nearby * clusterWeight + (power ? pickupWeight : 0);
+    const score = value / (dist + 1) ** (level === 'experto' ? 0.83 : 1)
+      - visit(x,y) * visitWeight / (dist+1);
+    if (score > best) {best=score;target={x,y};}
+  }
+
+  const scored = options.map(([dx,dy]) => {
+    const x=cpu.x+dx,y=cpu.y+dy;
+    const toward = target ? Math.abs(cpu.x-target.x)+Math.abs(cpu.y-target.y)-Math.abs(x-target.x)-Math.abs(y-target.y) : 0;
+    let local = nonOwned(x,y)*2 - visit(x,y)*visitWeight;
+    if (level === 'dificil' || level === 'experto') {
+      for(const [sx,sy] of [[1,0],[-1,0],[0,1],[0,-1]])
+        if(game.inBounds(x+sx,y+sy)) local+=nonOwned(x+sx,y+sy)*clusterWeight*0.4;
+    }
+    const score = toward * (level === 'principiante' ? 2.5 : 8) + local
+      - (reverse([dx,dy]) ? 3 : 0) + (pickupAt.has(y*game.size+x) ? pickupWeight : 0)
+      + rand() * (level==='normal'?1.2:level==='principiante'?4:0.5);
+    return {dx,dy,score};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+  return [scored[0].dx, scored[0].dy];
 }
