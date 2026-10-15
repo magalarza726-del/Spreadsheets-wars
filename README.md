@@ -11,11 +11,22 @@ Abre `index.html` mediante un servidor estático, o publica la raíz del reposit
 - **J1 vs J2:** pantalla dividida verticalmente; ambos recorren **el mismo** tablero, cada uno con su cámara.
 - **J1 vs COM:** una sola vista y una computadora que conquista celdas y persigue power-ups.
 
-| Modo | Tamaño | Tiempo |
+El tamaño y la duración se seleccionan **de manera independiente**. Cualquiera de los tres mapas puede combinarse con 1, 2 o 3 minutos, o un tiempo personalizado de 0,5 a 15 minutos (pasos de 30 segundos).
+
+| Tablero | Dimensiones | Celdas |
 | --- | --- | --- |
-| Bala | 20 × 20 | 1:00 |
-| Blitz | 30 × 30 | 2:00 |
-| Rápida | 60 × 60 | 3:00 |
+| Pequeño | 30 × 30 | 900 |
+| Mediano | 50 × 50 | 2.500 |
+| Grande | 70 × 70 | 4.900 |
+
+| Duración | Tiempo |
+| --- | --- |
+| Bala | 1:00 |
+| Blitz | 2:00 |
+| Rápida | 3:00 |
+| Personalizado | 0:30 a 15:00 |
+
+En **J1 vs COM** hay cuatro dificultades. Todas comparten la misma velocidad base: **Principiante** explora de forma más aleatoria; **Normal** busca casillas y power-ups próximos; **Difícil** prioriza objetivos y disputa territorio; **Experto** evalúa concentraciones de casillas y persigue estratégicamente power-ups.
 
 ### Controles
 
@@ -25,7 +36,7 @@ Abre `index.html` mediante un servidor estático, o publica la raíz del reposit
 - **Rueda del ratón:** recorrer la hoja temporalmente; la cámara vuelve a seguir al jugador.
 - **Zoom:** control de la barra de estado (65–130%).
 
-Velocidad: **10 celdas por segundo (1 celda cada 100 ms)** al mantener la dirección. Cada movimiento ocupa exactamente una celda. Entrar en una celda rival la convierte a tu color. Las casillas pueden reconquistarse. La barra de conquista muestra territorio por propietario, no golpes acumulados.
+Velocidad: **25 celdas por segundo (1 celda cada 40 ms)** al mantener la dirección. Cada movimiento ocupa exactamente una celda. Entrar en una celda rival la convierte a tu color. Las casillas pueden reconquistarse. La barra de conquista muestra territorio por propietario, no golpes acumulados.
 
 ### Power-ups simétricos
 
@@ -38,7 +49,7 @@ Las **casillas verde claro** activan el efecto automáticamente al recogerlas. P
 | Bomba | Zona 7 × 7, hasta 49 casillas, limitada por bordes | Inmediato |
 | SUMA | Franja de tres celdas perpendicular al movimiento | 10 s |
 | PRODUCTO | Cuadrado de 3 × 3 en cada paso | 4 s |
-| PROMEDIO | Doble velocidad (50 ms/celda (20 celdas/s)) | 6 s |
+| PROMEDIO | Doble velocidad (20 ms/celda, 50 celdas/s) | 6 s |
 | CONCATENAR | Durante el efecto el rival pinta con tu color | 2 s |
 | ÍNDICE | Salto automático junto al rival; retorno a la posición original | 3 s |
 
