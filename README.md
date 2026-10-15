@@ -91,3 +91,19 @@ README.md
 ## Pendiente para V2
 
 Ajuste fino de la IA y balance competitivo con partidas reales, sonido opcional, accesibilidad avanzada y multijugador online. La V1 no incluye sincronización online ni almacenamiento de partidas.
+
+## Música de partida (V1.4)
+Al crear una partida se reproduce una canción aleatoria. Cuando acaba, empieza otra sin repetir inmediatamente la anterior; la música se pausa junto a la partida, se detiene al salir o finalizar y cuenta con volumen, silencio y cambio de pista en la cinta.
+
+Se recibieron **seis MP3 diferentes**, no siete. Esta es la estructura necesaria:
+
+| Canción | Ruta |
+| --- | --- |
+| Garra de Acero | `music/garra-de-acero.mp3` |
+| Garra de Acero (versión 2) | `music/garra-de-acero-2.mp3` |
+| Laboratorio X | `music/laboratorio-x.mp3` |
+| Marcha de Cero | `music/marcha-de-cero.mp3` |
+| Ceniza y Rayo | `music/ceniza-y-rayo.mp3` |
+| Pulso de Acero | `music/pulso-de-acero.mp3` |
+
+Los archivos MP3 están incluidos en el ZIP completo de la V1.4. **Para reproducirlos en GitHub Pages hay que subir también los seis MP3 a la carpeta `music/` del repositorio.** El conector de edición de código no permitió adjuntar automáticamente archivos binarios grandes. Hasta entonces, el sitio muestra que la música no está disponible, sin interrumpir el juego. Cuando se entregue la séptima canción, añádela a `music/` y al arreglo `TRACKS` de `music.js`.
