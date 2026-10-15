@@ -72,7 +72,7 @@ function updateChoices() {
   const valid=Number.isFinite(seconds)&&seconds>=30&&seconds<=900;
   $('#customMinutes').setCustomValidity(valid?'':'Selecciona entre 0,5 y 15 minutos');
   $('#startGame').disabled=!valid;
-  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${valid?formatTime(seconds):'Tiempo no válido'} · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label}`:'J1 vs J2'} · 25 celdas/s`;
+  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${valid?formatTime(seconds):'Tiempo no válido'} · ${selectedMatch==='ai'?`J1 25 c/s · COM ${DIFFICULTIES[selectedDifficulty].label} ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 celdas/s'}`;
 }
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
@@ -171,7 +171,7 @@ function getCellDims() {return [Math.round(CELL_W*zoom),Math.round(CELL_H*zoom)]
 function startMatch() {
   const map=MAPS[selectedMap], seconds=getMatchSeconds();
   if(!Number.isFinite(seconds)||seconds<30||seconds>900)return;
-  const battle=new SpreadsheetBattle({size:map.size,seconds,againstComputer:selectedMatch==='ai'});
+  const battle=new SpreadsheetBattle({size:map.size,seconds,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
   session={game:battle,map:selectedMap,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
   zoom=1;$('#zoomRange').value='100';$('#zoomLabel').textContent='100%';
   keys.clear();keyOrder={1:[],2:[]};
@@ -184,7 +184,7 @@ function startMatch() {
   $('#miniOpponent').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniSize').textContent=`${map.size} × ${map.size}`;
   $('#currentMode').textContent=`${map.label.toUpperCase()} · ${map.size} × ${map.size} · ${formatTime(seconds)}`;
-  $('#matchFormat').textContent=selectedMatch==='ai'?`J1 vs COM · ${DIFFICULTIES[selectedDifficulty].label}`:'J1 vs J2';
+  $('#matchFormat').textContent=selectedMatch==='ai'?`J1 vs COM · ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2';
   $('#bottomStatus').textContent='Listo · Mueve tu selección para pintar';
   $('.excel-tab.active')?.classList.remove('active');
   $('[data-tab="Inicio"]').classList.add('active');
