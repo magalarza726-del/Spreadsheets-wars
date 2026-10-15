@@ -25,7 +25,7 @@ Abre `index.html` mediante un servidor estático, o publica la raíz del reposit
 - **Rueda del ratón:** recorrer la hoja temporalmente; la cámara vuelve a seguir al jugador.
 - **Zoom:** control de la barra de estado (65–130%).
 
-Velocidad: **1 celda cada 250 ms** al mantener la dirección. Cada movimiento ocupa exactamente una celda. Entrar en una celda rival la convierte a tu color. Las casillas pueden reconquistarse. La barra de conquista muestra territorio por propietario, no golpes acumulados.
+Velocidad: **10 celdas por segundo (1 celda cada 100 ms)** al mantener la dirección. Cada movimiento ocupa exactamente una celda. Entrar en una celda rival la convierte a tu color. Las casillas pueden reconquistarse. La barra de conquista muestra territorio por propietario, no golpes acumulados.
 
 ### Power-ups simétricos
 
@@ -38,7 +38,7 @@ Las **casillas verde claro** activan el efecto automáticamente al recogerlas. P
 | Bomba | Zona 7 × 7, hasta 49 casillas, limitada por bordes | Inmediato |
 | SUMA | Franja de tres celdas perpendicular al movimiento | 10 s |
 | PRODUCTO | Cuadrado de 3 × 3 en cada paso | 4 s |
-| PROMEDIO | Doble velocidad (125 ms/celda) | 6 s |
+| PROMEDIO | Doble velocidad (50 ms/celda (20 celdas/s)) | 6 s |
 | CONCATENAR | Durante el efecto el rival pinta con tu color | 2 s |
 | ÍNDICE | Salto automático junto al rival; retorno a la posición original | 3 s |
 
