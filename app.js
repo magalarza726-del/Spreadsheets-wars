@@ -50,6 +50,8 @@ function showMinimap(show) {
 }
 mapToggle.addEventListener('click', () => showMinimap(mapWidget.classList.contains('mini-collapsed')));
 let touchVectors = {1:null,2:null};
+let touchControllers = {1:null,2:null};
+let layoutEditing = false;
 let selectedDifficulty = 'normal';
 let session = null;
 let zoom = 1;
@@ -177,7 +179,7 @@ function buildView(playerId) {
   const label = isComputer ? 'COM' : `J${playerId}`;
   pane.innerHTML = `<div class="player-bar"><div class="player-identity"><span class="player-chip ${playerId===2?'orange':''}">${label}</span><span class="player-controls">${playerId===1?'↑ ← ↓ →':isComputer?'Rival automático':'W A S D'}</span></div><div class="active-powerups" aria-label="Habilidades activas"></div></div><div class="sheet-surface"><canvas class="sheet-canvas" aria-label="Hoja de cálculo del jugador ${label}"></canvas><div class="sheet-scrollhint"><div class="scroll-marker"></div></div></div>`;
   playArea.appendChild(pane);
-  if(selectedTouch!=='none')attachTouchControls(pane,playerId,selectedTouch,vector=>{
+  if(selectedTouch!=='none')touchControllers[playerId]=attachTouchControls(pane,playerId,selectedTouch,vector=>{
     touchVectors[playerId]=vector;
     if(vector)attemptMove(playerId,performance.now());
     else if(session)session.lastMoved[playerId]=-Infinity;
@@ -203,6 +205,9 @@ function getCellDims() {return [Math.round(CELL_W*zoom),Math.round(CELL_H*zoom)]
 function startMatch() {
   const map=MAPS[selectedMap], seconds=getMatchSeconds();
   if(!Number.isFinite(seconds)||seconds<=0)return;
+  toggleLayoutEditor(false);
+  for(const control of Object.values(touchControllers))control?.destroy?.();
+  touchControllers={1:null,2:null};
   const battle=new SpreadsheetBattle({size:map.size,seconds,mode:selectedDuration,terrain:selectedTerrain,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
   session={game:battle,map:selectedMap,terrain:selectedTerrain,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
   zoom=isCompactGame() ? .75 : 1;
@@ -214,6 +219,7 @@ function startMatch() {
   playArea.classList.toggle('split',selectedMatch==='pvp');
   session.views.push(buildView(1));
   if(selectedMatch==='pvp') session.views.push(buildView(2));
+  toggle($('#layoutEditBtn'), selectedTouch!=='none');
   $('#opponentTag').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniOpponent').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniSize').textContent=`${map.size} × ${map.size}`;
@@ -250,6 +256,8 @@ $('#exitBtn').addEventListener('click',returnHome);
 $('#pauseExitBtn').addEventListener('click',returnHome);
 $('#resultsHomeBtn').addEventListener('click',returnHome);
 $('#pauseBtn').addEventListener('click',switchPause);
+$('#layoutEditBtn').addEventListener('click',()=>toggleLayoutEditor());
+$('#layoutClose').addEventListener('click',()=>toggleLayoutEditor(false));
 $('#resumeBtn').addEventListener('click',switchPause);
 $('#musicToggle').addEventListener('click',()=>{ music.setMuted(!music.audio.muted); if (music.active && music.audio.paused && !session?.game.paused) music.resume(); });
 $('#musicNext').addEventListener('click',()=>{ if (session?.game.running && !session.game.paused) music.next(); });
@@ -260,13 +268,69 @@ $('#zoomRange').addEventListener('input',event=>{zoom=Number(event.target.value)
 window.addEventListener('resize', () => {
   if (session && isCompactGame() && window.innerHeight < 700 && !mapWidget.classList.contains('mini-collapsed')) showMinimap(false);
 });
+
+// Each player gets an independent draggable controller and size preference.
+// Gameplay does not advance while the layout editor is open.
+function renderLayoutSettings() {
+  const target=$('#layoutSettings');
+  target.replaceChildren();
+  for(const [idString, controller] of Object.entries(touchControllers)){
+    if(!controller)continue;
+    const id=Number(idString);
+    const line=document.createElement('div');line.className='layout-setting';
+    const label=document.createElement('label');
+    label.textContent='J'+id+' · Tamaño';
+    const slider=document.createElement('input');slider.type='range';
+    slider.min='70';slider.max='180';slider.step='5';
+    slider.value=String(Math.round(controller.getLayout().scale*100));
+    slider.id='layoutSlider'+id;
+    label.htmlFor=slider.id;
+    const number=document.createElement('output');number.className='layout-percent';
+    number.htmlFor=slider.id;number.textContent=slider.value+'%';
+    slider.setAttribute('aria-label','Tamaño del control J'+id);
+    slider.addEventListener('input',()=>{
+      number.textContent=Math.round(controller.setScale(Number(slider.value)/100)*100)+'%';
+    });
+    const reset=document.createElement('button');reset.type='button';
+    reset.className='layout-reset';reset.textContent='Restablecer J'+id;
+    reset.addEventListener('click',()=>{
+      const initial=controller.resetPlacement();
+      slider.value=String(Math.round(initial.scale*100));
+      number.textContent=slider.value+'%';
+    });
+    line.append(label,slider,number,reset);
+    target.append(line);
+  }
+}
+function toggleLayoutEditor(force){
+  const next=typeof force==='boolean'?force:!layoutEditing;
+  if(next && (!session?.game.running || session.game.paused || selectedTouch==='none'))return;
+  layoutEditing=next;
+  toggle($('#layoutEditor'),next);
+  const button=$('#layoutEditBtn');
+  button.classList.toggle('editing',next);
+  button.setAttribute('aria-expanded',String(next));
+  button.setAttribute('aria-pressed',String(next));
+  button.textContent=next?'✓ Listo':'🎮 Ajustar';
+  touchVectors={1:null,2:null};
+  keys.clear();keyOrder={1:[],2:[]};
+  if(session)session.lastMoved={1:-Infinity,2:-Infinity};
+  for(const control of Object.values(touchControllers))control?.setEditing?.(next);
+  if(next){renderLayoutSettings();showMinimap(false);}
+  lastFrame=performance.now();
+}
+
 function returnHome() {
+  toggleLayoutEditor(false);
+  for(const control of Object.values(touchControllers))control?.destroy?.();
+  touchControllers={1:null,2:null};
   music.stop();
   session=null;keys.clear();keyOrder={1:[],2:[]};touchVectors={1:null,2:null};
   toggle(results,false);toggle(pauseDialog,false);toggle(gameScreen,false);toggle(home,true);
 }
 function switchPause() {
   if(!session || !session.game.running) return;
+  if(layoutEditing)toggleLayoutEditor(false);
   session.game.paused=!session.game.paused;
   if (session.game.paused) music.pause(); else music.resume();
   toggle(pauseDialog,session.game.paused);
@@ -317,7 +381,7 @@ window.addEventListener('keyup',event=>{
 });
 
 function attemptMove(playerId,time) {
-  if(!session?.game.running || session.game.paused) return;
+  if(!session?.game.running || session.game.paused || layoutEditing) return;
   const game=session.game;
   const isAI=playerId===2 && session.match==='ai';
   if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId]) {
@@ -523,7 +587,7 @@ function loop(time) {
   const delta=Math.max(0,Math.min(1,(time-lastFrame)/1000));lastFrame=time;
   if(!session)return;
   const game=session.game;
-  if(game.running && !game.paused){
+  if(game.running && !game.paused && !layoutEditing){
     game.advance(delta);
     if(game.running){
       attemptMove(1,time);
