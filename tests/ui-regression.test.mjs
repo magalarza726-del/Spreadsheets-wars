@@ -18,5 +18,5 @@ test('crear partida y revancha pasan por un manejador seguro', () => {
 });
 
 test('la página solicita el JavaScript corregido sin usar caché de versión anterior', () => {
-  assert.match(html, /<script type="module" src="\.\/app\.js\?v=1\.5\.0"><\/script>/);
+  assert.match(html, /<script type="module" src="\.\/app\.js\?v=1\.6\.0"><\/script>/);
 });
