@@ -18,5 +18,14 @@ test('crear partida y revancha pasan por un manejador seguro', () => {
 });
 
 test('la página solicita el JavaScript corregido sin usar caché de versión anterior', () => {
-  assert.match(html, /<script type="module" src="\.\/app\.js\?v=1\.8\.0"><\/script>/);
+  assert.match(html, /<script type="module" src="\.\/app\.js\?v=1\.9\.0"><\/script>/);
+});
+
+test('el editor táctil está conectado a la partida sin reemplazar sus controles',()=>{
+  assert.match(html, /id="layoutEditBtn"/);
+  assert.match(html, /id="layoutEditor"/);
+  assert.match(app, /function toggleLayoutEditor\(force\)/);
+  assert.match(app, /function renderLayoutSettings\(\)/);
+  assert.match(app, /if\(game.running && !game.paused && !layoutEditing\)/);
+  assert.match(app, /controller\.setScale\(Number\(slider.value\)\/100\)/);
 });
