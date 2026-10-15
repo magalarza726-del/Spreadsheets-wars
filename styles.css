@@ -49,3 +49,27 @@
 #musicVolume{width:67px;accent-color:#107c41;cursor:pointer}
 @media(max-width:920px){.music-track{max-width:80px}#musicVolume{width:50px}}
 @media(max-width:650px){.music-track{display:none}.music-controls{padding-left:3px;gap:1px}#musicVolume{width:40px}}
+
+/* Local music library in the match-setup dialog */
+.music-setup{border:1px solid #d9e8dd;background:#f9fcfa;border-radius:9px;padding:13px 15px;margin-top:16px}
+.music-setup-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.music-setup-header .dialog-label{margin:0 0 10px}
+.music-count{font-size:11px;color:#668575;background:#e6f4eb;border-radius:12px;padding:3px 9px;white-space:nowrap}
+.music-setup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.add-music-button{padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.add-music-button:hover{background:#eaf7ee;border-color:#66ac7e}
+.add-music-button.music-loading{opacity:.6;pointer-events:none}
+#addMusicFiles{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;clip-path:inset(50%)}
+#addMusicFiles:focus-visible + label{outline:2px solid #107c41}
+.music-source-label{color:#5b7566;font-size:11px;margin-left:auto}
+.music-source-select{color:#28513a;background:#fff;border:1px solid #cee0d3;border-radius:6px;font-size:12px;padding:8px;max-width:155px}
+.music-source-select:focus-visible{outline:2px solid #107c41}
+.local-music-list{list-style:none;margin:9px 0 0;padding:0;max-height:105px;overflow:auto;display:flex;flex-direction:column;gap:5px}
+.local-song{display:flex;gap:9px;align-items:center;background:#fff;border:1px solid #e3ece6;border-radius:5px;padding:4px 6px 4px 10px;min-height:29px;color:#365947;font-size:11px}
+.local-song span{flex:1;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.remove-song{color:#b94b4b;background:#fff;border:0;font-size:19px;cursor:pointer;line-height:1;border-radius:4px;padding:3px 8px}
+.remove-song:hover{background:#ffeded}
+.local-music-status,.music-storage-hint{color:#698273;font-size:11px;line-height:1.5;margin-top:8px}
+.local-music-status.music-error{color:#ad443f}
+.music-storage-hint{margin-top:3px;font-size:10px;color:#7b9484}
+@media(max-width:620px){.music-setup{padding:11px}.music-source-label{margin-left:0}}
