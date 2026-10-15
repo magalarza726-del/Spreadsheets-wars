@@ -12,10 +12,10 @@ export const DURATIONS = Object.freeze({
 });
 
 export const DIFFICULTIES = Object.freeze({
-  principiante: {label: 'Principiante', description: 'Explora sin un plan fijo y deja oportunidades libres.'},
-  normal: {label: 'Normal', description: 'Busca casillas disponibles y recoge poderes cercanos.'},
-  dificil: {label: 'Difícil', description: 'Persigue objetivos valiosos y disputa tu territorio.'},
-  experto: {label: 'Experto', description: 'Evalúa regiones, rutas y power-ups de forma agresiva.'}
+  principiante: {label: 'Fácil', cellsPerSecond: 10, description: 'Explora sin un plan fijo y deja oportunidades libres.'},
+  normal: {label: 'Normal', cellsPerSecond: 15, description: 'Busca casillas disponibles y recoge poderes cercanos.'},
+  dificil: {label: 'Difícil', cellsPerSecond: 20, description: 'Persigue objetivos valiosos y disputa tu territorio.'},
+  experto: {label: 'Experto', cellsPerSecond: 25, description: 'Evalúa regiones, rutas y power-ups de forma agresiva.'}
 });
 
 export const POWERUPS = Object.freeze({
@@ -41,11 +41,13 @@ export const columnLabel = (index) => {
 };
 
 export class SpreadsheetBattle {
-  constructor({size = 30, seconds = 120, againstComputer = false, random = Math.random} = {}) {
+  constructor({size = 30, seconds = 120, againstComputer = false, difficulty = 'normal', random = Math.random} = {}) {
     if (!Number.isInteger(size) || size < 4 || !Number.isFinite(seconds) || seconds <= 0) throw new Error('Configuración de partida no válida');
+    if (!DIFFICULTIES[difficulty]) throw new Error('Dificultad desconocida');
     this.size = size;
     this.seconds = seconds;
     this.againstComputer = againstComputer;
+    this.difficulty = difficulty;
     this.random = random;
     this.elapsed = 0;
     this.running = true;
@@ -95,7 +97,12 @@ export class SpreadsheetBattle {
     return Math.max(0, (this.players[playerId - 1].effects[type] ?? 0) - this.elapsed);
   }
 
-  movementInterval(playerId) { return this.hasEffect(playerId, 'promedio') ? 20 : 40; }
+  movementInterval(playerId) {
+    const cellsPerSecond = this.againstComputer && playerId === 2
+      ? DIFFICULTIES[this.difficulty].cellsPerSecond
+      : 25;
+    return 1000 / (cellsPerSecond * (this.hasEffect(playerId, 'promedio') ? 2 : 1));
+  }
 
   paintingOwner(playerId) {
     return this.hasEffect(3 - playerId, 'concatenar') ? 3 - playerId : playerId;
