@@ -53,9 +53,15 @@ test('SUMA 3 celdas y PRODUCTO 9 celdas',()=>{
   assert.equal(b.hasEffect(1,'suma'),true);
 });
 
-test('PROMEDIO reduce el intervalo de 250 a 125 ms durante seis segundos',()=>{
-  const b=create();b.activate(1,'promedio');assert.equal(b.movementInterval(1),125);
-  b.advance(6.1);assert.equal(b.movementInterval(1),250);
+test('velocidad base 10 celdas/s para ambos jugadores; PROMEDIO 20 celdas/s durante seis segundos',()=>{
+  const b=create();
+  assert.equal(b.movementInterval(1),100);
+  assert.equal(b.movementInterval(2),100);
+  b.activate(1,'promedio');
+  assert.equal(b.movementInterval(1),50);
+  assert.equal(b.movementInterval(2),100);
+  b.advance(6.1);
+  assert.equal(b.movementInterval(1),100);
 });
 
 test('CONCATENAR invierte el propietario de la pintura enemiga por dos segundos',()=>{
