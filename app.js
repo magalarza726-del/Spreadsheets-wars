@@ -33,7 +33,22 @@ let selectedMatch = 'pvp';
 let selectedMap = 'pequeno';
 let selectedDuration = 'bala';
 let selectedTerrain = 'normal';
+const mobileInput = window.matchMedia('(pointer: coarse)');
 let selectedTouch = 'none';
+try {
+  const saved = localStorage.getItem('sw-touch-choice');
+  selectedTouch = ['none','joystick','arrows'].includes(saved) ? saved : mobileInput.matches ? 'joystick' : 'none';
+} catch { selectedTouch = mobileInput.matches ? 'joystick' : 'none'; }
+const isCompactGame = () => mobileInput.matches || window.innerWidth <= 760;
+const mapToggle = $('#minimapToggle');
+const mapWidget = $('#minimapWidget');
+function showMinimap(show) {
+  mapWidget.classList.toggle('mini-collapsed', !show);
+  mapToggle.setAttribute('aria-expanded', String(show));
+  mapToggle.setAttribute('aria-label', show ? 'Ocultar minimapa' : 'Mostrar mapa completo');
+  mapToggle.textContent = show ? '× Mapa' : '▦ Mapa';
+}
+mapToggle.addEventListener('click', () => showMinimap(mapWidget.classList.contains('mini-collapsed')));
 let touchVectors = {1:null,2:null};
 let selectedDifficulty = 'normal';
 let session = null;
@@ -48,6 +63,11 @@ let importingMusic = false;
 function toggle(element, show) { element.classList.toggle('hidden',!show); }
 const formatTime = (time) => { const whole = Math.max(0,Math.ceil(time)); return `${String(Math.floor(whole/60)).padStart(2,'0')}:${String(whole%60).padStart(2,'0')}`; };
 
+function syncTouchSetting() {
+  const selected = $('input[name="touchChoice"][value="' + selectedTouch + '"]');
+  if(selected) selected.checked = true;
+}
+syncTouchSetting();
 function setupMatch(kind) {
   selectedMatch = kind;
   $('#selectedMatchText').textContent = kind === 'ai' ? 'J1 vs COM · Un jugador contra la computadora' : 'J1 vs J2 · Dos jugadores locales';
@@ -82,7 +102,10 @@ $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(bt
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
 $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
 $$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"], input[name="terrainChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
-$$('input[name="touchChoice"]').forEach(input=>input.addEventListener('change',()=>{selectedTouch=$('input[name="touchChoice"]:checked').value;}));
+$$('input[name="touchChoice"]').forEach(input=>input.addEventListener('change',()=>{
+  selectedTouch=$('input[name="touchChoice"]:checked').value;
+  try {localStorage.setItem('sw-touch-choice',selectedTouch);} catch {}
+}));
 
 const libraryInput = $('#addMusicFiles');
 const libraryList = $('#localMusicList');
@@ -182,7 +205,9 @@ function startMatch() {
   if(!Number.isFinite(seconds)||seconds<=0)return;
   const battle=new SpreadsheetBattle({size:map.size,seconds,mode:selectedDuration,terrain:selectedTerrain,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
   session={game:battle,map:selectedMap,terrain:selectedTerrain,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
-  zoom=1;$('#zoomRange').value='100';$('#zoomLabel').textContent='100%';
+  zoom=isCompactGame() ? .75 : 1;
+  $('#zoomRange').value=String(Math.round(zoom*100));$('#zoomLabel').textContent=Math.round(zoom*100)+'%';
+  showMinimap(!isCompactGame());
   keys.clear();keyOrder={1:[],2:[]};touchVectors={1:null,2:null};
   toasts.forEach(clearTimeout);toasts=[];$('#toastContainer').replaceChildren();
   playArea.replaceChildren();
@@ -232,6 +257,9 @@ $('#musicVolume').addEventListener('input',event=>music.setVolume(Number(event.t
 $$('.excel-tab').forEach(tab=>tab.addEventListener('click',()=>{$$('.excel-tab').forEach(b=>b.classList.toggle('active',b===tab));}));
 $('#zoomRange').addEventListener('input',event=>{zoom=Number(event.target.value)/100;$('#zoomLabel').textContent=event.target.value+'%';});
 
+window.addEventListener('resize', () => {
+  if (session && isCompactGame() && window.innerHeight < 700 && !mapWidget.classList.contains('mini-collapsed')) showMinimap(false);
+});
 function returnHome() {
   music.stop();
   session=null;keys.clear();keyOrder={1:[],2:[]};touchVectors={1:null,2:null};
