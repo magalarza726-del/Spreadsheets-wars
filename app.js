@@ -1,4 +1,4 @@
-import {SpreadsheetBattle, MODES, POWERUPS, DIRECTIONS, columnLabel, clamp} from './core.js';
+import {SpreadsheetBattle, MAPS, DURATIONS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection} from './core.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -16,7 +16,9 @@ const CELL_COLORS = {0:'#ffffff',1:'#c8dffc',2:'#f9dec7'};
 const CELL_W = 83, CELL_H = 23, COL_HEADER = 22, ROW_HEADER = 39;
 
 let selectedMatch = 'pvp';
-let selectedMode = 'blitz';
+let selectedMap = 'pequeno';
+let selectedDuration = 'blitz';
+let selectedDifficulty = 'normal';
 let session = null;
 let zoom = 1;
 let lastFrame = performance.now();
@@ -31,19 +33,38 @@ const formatTime = (time) => { const whole = Math.max(0,Math.ceil(time)); return
 function setupMatch(kind) {
   selectedMatch = kind;
   $('#selectedMatchText').textContent = kind === 'ai' ? 'J1 vs COM · Un jugador contra la computadora' : 'J1 vs J2 · Dos jugadores locales';
+  toggle($('#difficultySection'),kind==='ai');
+  updateChoices();
   toggle(setup,true);
 }
+function getMatchSeconds() {
+  return selectedDuration === 'custom' ? Math.round(Number($('#customMinutes').value)*60) : DURATIONS[selectedDuration].seconds;
+}
 function updateChoices() {
-  $$('.size-choice').forEach(label => {
-    const radio = $('input', label);
-    label.classList.toggle('selected',radio.checked);
-    if(radio.checked) selectedMode = radio.value;
-  });
+  for(const [name,selector] of [['sizeChoice','.size-choice'],['durationChoice','.time-choice'],['difficultyChoice','.difficulty-choice']]) {
+    $$(`${selector}`).forEach(label=>{
+      const input=$('input[type="radio"]',label);
+      label.classList.toggle('selected',input.checked);
+      if(input.checked){
+        if(name==='sizeChoice')selectedMap=input.value;
+        if(name==='durationChoice')selectedDuration=input.value;
+        if(name==='difficultyChoice')selectedDifficulty=input.value;
+      }
+    });
+  }
+  const map=MAPS[selectedMap];
+  const seconds=getMatchSeconds();
+  const valid=Number.isFinite(seconds)&&seconds>=30&&seconds<=900;
+  $('#customMinutes').setCustomValidity(valid?'':'Selecciona entre 0,5 y 15 minutos');
+  $('#startGame').disabled=!valid;
+  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${valid?formatTime(seconds):'Tiempo no válido'} · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label}`:'J1 vs J2'} · 25 celdas/s`;
 }
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
 $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
-$$('input[name="sizeChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
+$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
+$('#customMinutes').addEventListener('focus',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
+$('#customMinutes').addEventListener('input',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
 $('#sidebarHelp').addEventListener('click',()=>toggle(help,true));
 $('#closeHelp').addEventListener('click',()=>toggle(help,false));
 $('#helpOk').addEventListener('click',()=>toggle(help,false));
@@ -74,9 +95,10 @@ function buildView(playerId) {
 
 function getCellDims() {return [Math.round(CELL_W*zoom),Math.round(CELL_H*zoom)];}
 function startMatch() {
-  const mode=MODES[selectedMode];
-  const battle=new SpreadsheetBattle({size:mode.size,seconds:mode.seconds,againstComputer:selectedMatch==='ai'});
-  session={game:battle,mode: selectedMode,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},lastAiDirection:null};
+  const map=MAPS[selectedMap], seconds=getMatchSeconds();
+  if(!Number.isFinite(seconds)||seconds<30||seconds>900)return;
+  const battle=new SpreadsheetBattle({size:map.size,seconds,againstComputer:selectedMatch==='ai'});
+  session={game:battle,map:selectedMap,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
   zoom=1;$('#zoomRange').value='100';$('#zoomLabel').textContent='100%';
   keys.clear();keyOrder={1:[],2:[]};
   toasts.forEach(clearTimeout);toasts=[];$('#toastContainer').replaceChildren();
@@ -86,16 +108,16 @@ function startMatch() {
   if(selectedMatch==='pvp') session.views.push(buildView(2));
   $('#opponentTag').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniOpponent').textContent=selectedMatch==='ai'?'COM':'J2';
-  $('#miniSize').textContent=`${mode.size} × ${mode.size}`;
-  $('#currentMode').textContent=`${mode.label.toUpperCase()} · ${mode.size} × ${mode.size}`;
-  $('#matchFormat').textContent=selectedMatch==='ai'?'J1 vs COM':'J1 vs J2';
+  $('#miniSize').textContent=`${map.size} × ${map.size}`;
+  $('#currentMode').textContent=`${map.label.toUpperCase()} · ${map.size} × ${map.size} · ${formatTime(seconds)}`;
+  $('#matchFormat').textContent=selectedMatch==='ai'?`J1 vs COM · ${DIFFICULTIES[selectedDifficulty].label}`:'J1 vs J2';
   $('#bottomStatus').textContent='Listo · Mueve tu selección para pintar';
   $('.excel-tab.active')?.classList.remove('active');
   $('[data-tab="Inicio"]').classList.add('active');
   toggle(setup,false);toggle(pauseDialog,false);toggle(results,false);toggle(home,false);toggle(gameScreen,true);
   $('#pauseBtn').textContent='Ⅱ Pausa';
   lastFrame=performance.now();lastUiDraw=0;
-  showToast('Nuevo libro',`${mode.label} · ${mode.size} × ${mode.size}`);
+  showToast('Nuevo libro',`${map.label} · ${map.size} × ${map.size} · ${formatTime(seconds)}`);
   updateHUD();
 }
 $('#startGame').addEventListener('click',startMatch);
@@ -156,54 +178,42 @@ window.addEventListener('keydown',event=>{
 window.addEventListener('keyup',event=>{
   keys.delete(event.code);
   const id=keyToPlayer(event.code);
-  if(id)keyOrder[id]=keyOrder[id].filter(key=>key!==event.code);
+  if(id){
+    keyOrder[id]=keyOrder[id].filter(key=>key!==event.code);
+    if(!keyOrder[id].length && session)session.lastMoved[id]=-Infinity;
+  }
 });
 
 function attemptMove(playerId,time) {
   if(!session?.game.running || session.game.paused) return;
   const game=session.game;
+  const isAI=playerId===2 && session.match==='ai';
+  if(!isAI && !keyOrder[playerId].length) {
+    session.lastMoved[playerId]=-Infinity;
+    return;
+  }
   const interval=game.movementInterval(playerId);
-  if(time-session.lastMoved[playerId]<interval-1) return;
-  let direction;
-  if(playerId===2 && session.match==='ai') direction=computerDirection(game);
-  else direction=DIRECTIONS[keyOrder[playerId].at(-1)];
-  if(!direction) return;
-  const didMove=game.move(playerId,...direction);
-  session.lastMoved[playerId]=time;
-  if(didMove && playerId===1) $('#selectedCell').innerHTML=`${columnLabel(game.players[0].x)}${game.players[0].y+1} <span>⌄</span>`;
-}
-
-function computerDirection(game) {
-  const cpu=game.players[1];
-  const options=[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>game.inBounds(cpu.x+dx,cpu.y+dy));
-  if(!options.length) return [0,1];
-  // Pickups matter, but only within a sensible walking radius.
-  let target=null;let targetCost=Infinity;
-  for(const item of game.pickups) {
-    const distance=Math.abs(item.x-cpu.x)+Math.abs(item.y-cpu.y);
-    if(distance<targetCost && distance<=Math.max(12,game.size/3)) {target=item;targetCost=distance;}
-  }
-  // Otherwise, seek a nearby cell which is not currently controlled by the computer.
-  if(!target) {
-    for(let y=0;y<game.size;y++)for(let x=0;x<game.size;x++){
-      if(game.at(x,y)===2)continue;
-      const distance=Math.abs(x-cpu.x)+Math.abs(y-cpu.y);
-      const cost=distance+(game.at(x,y)===1?-0.5:0);
-      if(cost<targetCost && distance>0) {target={x,y};targetCost=cost;}
+  if(!Number.isFinite(session.lastMoved[playerId]))session.lastMoved[playerId]=time-interval;
+  // Handle sub-frame steps (especially PROMEDIO: 20 ms) without skipping any cell.
+  let steps=0;
+  while(time-session.lastMoved[playerId]>=interval-0.5 && steps<12){
+    const direction=isAI?computerDirection(game):DIRECTIONS[keyOrder[playerId].at(-1)];
+    if(!direction)break;
+    const didMove=game.move(playerId,...direction);
+    session.lastMoved[playerId]+=interval;
+    steps++;
+    if(isAI && didMove){
+      const cpu=game.players[1];
+      const idx=cpu.y*game.size+cpu.x;
+      session.aiMemory.visits[idx]=Math.min(65535,session.aiMemory.visits[idx]+1);
     }
+    if(didMove && playerId===1)$('#selectedCell').innerHTML=`${columnLabel(game.players[0].x)}${game.players[0].y+1} <span>⌄</span>`;
   }
-  const ranked=options.map(([dx,dy])=>{
-    const x=cpu.x+dx,y=cpu.y+dy;
-    let score=game.at(x,y)===1?7:game.at(x,y)===0?5:-2;
-    if(target) score+=(Math.abs(cpu.x-target.x)+Math.abs(cpu.y-target.y)-Math.abs(x-target.x)-Math.abs(y-target.y))*5;
-    if(dx===-cpu.dx && dy===-cpu.dy)score-=4.5;
-    // Power-up collateral can outweigh the shortest path.
-    if(game.pickups.some(item=>item.x===x && item.y===y))score+=35;
-    // Tiny nondeterminism helps the COM avoid repeating the same loop.
-    score+=Math.random()*2;
-    return {direction:[dx,dy],score};
-  }).sort((a,b)=>b.score-a.score);
-  return ranked[0].direction;
+  // Avoid a burst of stale movements if the tab/main thread stalls.
+  if(steps===12)session.lastMoved[playerId]=time;
+}
+function computerDirection(game) {
+  return chooseComputerDirection(game, session.difficulty, session.aiMemory);
 }
 
 function syncCanvas(view) {
