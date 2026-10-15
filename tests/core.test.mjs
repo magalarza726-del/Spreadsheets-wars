@@ -6,7 +6,7 @@ const create = (settings = {}) => new SpreadsheetBattle({size:30,seconds:120,ran
 
 test('modos, letras y simetría central',()=>{
   assert.deepEqual(Object.values(MAPS).map(m=>m.size), [30,50,70]);
-  assert.deepEqual(Object.values(DURATIONS).map(m=>m.seconds), [60,120,180]);
+  assert.deepEqual(Object.values(DURATIONS).map(m=>m.seconds), [90,180]);
   assert.equal(Object.keys(DIFFICULTIES).length,4);
   assert.equal(columnLabel(0),'A'); assert.equal(columnLabel(25),'Z'); assert.equal(columnLabel(26),'AA');
   assert.deepEqual(mirrorCell(0,0,30),{x:29,y:29});
