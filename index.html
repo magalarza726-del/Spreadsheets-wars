@@ -14,7 +14,7 @@
   <section id="homeScreen" class="home-screen" aria-label="Pantalla principal">
     <header class="home-topbar">
       <div class="home-brand"><span class="brand-icon" aria-hidden="true">SW</span><span>Spreadsheets <strong>Wars</strong></span></div>
-      <div class="home-top-actions"><span class="version-tag">EDICIÓN 1.0</span><span class="profile-bubble">SW</span></div>
+      <div class="home-top-actions"><span class="version-tag">EDICIÓN 1.1</span><span class="profile-bubble">SW</span></div>
     </header>
     <div class="home-workspace">
       <aside class="home-sidebar">
@@ -85,7 +85,36 @@
   </section>
 
   <div class="modal-layer hidden" id="setupModal" role="dialog" aria-modal="true" aria-labelledby="setupHeading">
-    <div class="setup-dialog"><div class="modal-header"><div><span class="eyebrow">NUEVO LIBRO</span><h2 id="setupHeading">Configurar partida</h2></div><button type="button" class="icon-button" id="closeSetup" aria-label="Cerrar">×</button></div><p class="modal-description">Personaliza la batalla antes de abrir tu hoja de cálculo.</p><div class="dialog-label">MODO DE PARTIDA</div><div class="selected-match" id="selectedMatchText">J1 vs J2 · Dos jugadores locales</div><div class="dialog-label">TAMAÑO Y DURACIÓN</div><div class="mode-option-list" id="modeOptionList"><label class="size-choice"><input type="radio" name="sizeChoice" value="bala"><span class="size-preview size-20"></span><span class="size-details"><strong>Bala</strong><small>20 × 20 celdas · 400 casillas</small></span><span class="duration-chip">01:00</span></label><label class="size-choice selected"><input type="radio" name="sizeChoice" value="blitz" checked><span class="size-preview size-30"></span><span class="size-details"><strong>Blitz</strong><small>30 × 30 celdas · 900 casillas</small></span><span class="duration-chip">02:00</span></label><label class="size-choice"><input type="radio" name="sizeChoice" value="rapida"><span class="size-preview size-60"></span><span class="size-details"><strong>Rápida</strong><small>60 × 60 celdas · 3.600 casillas</small></span><span class="duration-chip">03:00</span></label></div><div class="modal-hint">✦ Los power-ups se generan en parejas simétricas cada 10 segundos.</div><div class="modal-footer"><button type="button" class="secondary-button" id="cancelSetup">Cancelar</button><button type="button" class="primary-button" id="startGame">Crear partida <span>→</span></button></div></div>
+    <div class="setup-dialog"><div class="modal-header"><div><span class="eyebrow">NUEVO LIBRO</span><h2 id="setupHeading">Configurar partida</h2></div><button type="button" class="icon-button" id="closeSetup" aria-label="Cerrar">×</button></div><p class="modal-description">Personaliza la batalla antes de abrir tu hoja de cálculo.</p><div class="dialog-label">MODO DE PARTIDA</div><div class="selected-match" id="selectedMatchText">J1 vs J2 · Dos jugadores locales</div><div class="config-grid">
+        <div class="config-section">
+          <div class="dialog-label">TAMAÑO DEL TABLERO</div>
+          <div class="mode-option-list" id="modeOptionList">
+            <label class="size-choice selected"><input type="radio" name="sizeChoice" value="pequeno" checked><span class="size-preview size-30"></span><span class="size-details"><strong>Pequeño</strong><small>30 × 30 · 900 celdas</small></span></label>
+            <label class="size-choice"><input type="radio" name="sizeChoice" value="mediano"><span class="size-preview size-50"></span><span class="size-details"><strong>Mediano</strong><small>50 × 50 · 2.500 celdas</small></span></label>
+            <label class="size-choice"><input type="radio" name="sizeChoice" value="grande"><span class="size-preview size-70"></span><span class="size-details"><strong>Grande</strong><small>70 × 70 · 4.900 celdas</small></span></label>
+          </div>
+        </div>
+        <div class="config-section">
+          <div class="dialog-label">DURACIÓN DE PARTIDA</div>
+          <div class="time-options" id="timeOptions">
+            <label class="time-choice"><input type="radio" name="durationChoice" value="bala"><span>Bala</span><strong>1 min</strong></label>
+            <label class="time-choice selected"><input type="radio" name="durationChoice" value="blitz" checked><span>Blitz</span><strong>2 min</strong></label>
+            <label class="time-choice"><input type="radio" name="durationChoice" value="rapida"><span>Rápida</span><strong>3 min</strong></label>
+            <label class="time-choice custom-time-choice"><input type="radio" name="durationChoice" value="custom"><span>Personalizado</span><span class="custom-time-entry"><input type="number" id="customMinutes" min="0.5" max="15" step="0.5" value="4" aria-label="Minutos personalizados"> min</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="difficulty-section hidden" id="difficultySection">
+        <div class="dialog-label">DIFICULTAD DE LA COMPUTADORA</div>
+        <div class="difficulty-options" id="difficultyOptions">
+          <label class="difficulty-choice"><input type="radio" name="difficultyChoice" value="principiante"><strong>Principiante</strong><small>Exploración casual</small></label>
+          <label class="difficulty-choice selected"><input type="radio" name="difficultyChoice" value="normal" checked><strong>Normal</strong><small>Conquista equilibrada</small></label>
+          <label class="difficulty-choice"><input type="radio" name="difficultyChoice" value="dificil"><strong>Difícil</strong><small>Persigue oportunidades</small></label>
+          <label class="difficulty-choice"><input type="radio" name="difficultyChoice" value="experto"><strong>Experto</strong><small>Control territorial</small></label>
+        </div>
+      </div>
+      <div class="setup-summary" id="setupSummary" aria-live="polite">30 × 30 · 2:00 · J1 vs J2</div>
+      <div class="modal-hint">✦ Los power-ups se generan en parejas simétricas cada 10 segundos.</div><div class="modal-footer"><button type="button" class="secondary-button" id="cancelSetup">Cancelar</button><button type="button" class="primary-button" id="startGame">Crear partida <span>→</span></button></div></div>
   </div>
 
   <div class="modal-layer hidden" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="small-dialog"><div class="pause-emblem">Ⅱ</div><h2 id="pauseHeading">Partida en pausa</h2><p>Tu libro de batalla está esperando. Pulsa Escape o continúa cuando quieras.</p><button type="button" class="primary-button full-width" id="resumeBtn">Reanudar partida →</button><button type="button" class="secondary-button full-width" id="pauseExitBtn">Volver al menú</button></div></div>
