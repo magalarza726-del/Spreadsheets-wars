@@ -203,3 +203,32 @@ html,body,#app{height:100%;height:100dvh;overscroll-behavior:none}
  .game-screen .excel-status{display:none}
  .game-screen .minimap-widget{bottom:4px}
 }
+
+
+/* V1.9 — user-positionable, size-adjustable touchscreen controls. */
+.game-screen{position:relative}
+.layout-edit-toggle{border:1px solid #b6dac5;color:#116f41;background:#eef9f1;padding:5px 9px;border-radius:6px;font:700 11px Aptos,"Segoe UI",Arial,sans-serif;cursor:pointer;white-space:nowrap}
+.layout-edit-toggle:hover,.layout-edit-toggle.editing{background:#117d48;color:#fff}
+.layout-editor{position:absolute;z-index:14;top:155px;right:14px;width:min(330px,calc(100vw - 28px));max-height:min(315px,calc(100dvh - 180px));overflow:auto;background:#fffffffa;border:1px solid #b5d7c2;box-shadow:0 10px 35px #1535264a;border-radius:12px;padding:12px;color:#214d34}
+.layout-editor-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.layout-editor-top strong{font-size:13px}
+.layout-editor-close{background:#107c41;color:#fff;border:0;border-radius:6px;padding:6px 11px;font-weight:800;cursor:pointer}
+.layout-editor p{font-size:11px;color:#607c69;line-height:1.5;margin:8px 0}
+.layout-settings{display:flex;flex-direction:column;gap:10px}
+.layout-setting{display:grid;grid-template-columns:auto minmax(65px,1fr) 42px;gap:6px 8px;align-items:center;background:#f3faf5;border:1px solid #dcebe0;padding:9px;border-radius:8px}
+.layout-setting label{font-size:11px;font-weight:750;white-space:nowrap}
+.layout-setting input{width:100%;accent-color:#107c41}
+.layout-setting .layout-percent{text-align:right;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.layout-setting .layout-reset{grid-column:1/-1;justify-self:start;background:#fff;border:1px solid #bcd6c6;border-radius:5px;font-size:11px;padding:5px 9px;color:#136b41;cursor:pointer}
+.layout-editor .layout-save-hint{color:#107c41;margin-bottom:0}
+.touch-controller.touch-editing{outline:3px dashed #168d50;border-radius:14px;box-shadow:0 0 0 5px #e1fae8b5;cursor:grab;touch-action:none}
+.touch-controller.touch-editing::after{content:"✥ MOVER";pointer-events:none;position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);font-size:11px;letter-spacing:.3px;white-space:nowrap;padding:4px 7px;color:white;background:#117d48;border-radius:5px;box-shadow:0 3px 7px #0002}
+.touch-controller.touch-editing:active{cursor:grabbing}
+@media (pointer:coarse),(max-width:760px){
+ .layout-edit-toggle{font-size:10px;padding:4px 6px}
+ .layout-editor{top:130px;right:8px;width:min(300px,calc(100vw - 16px));max-height:min(240px,calc(100dvh - 145px));padding:10px}
+ .touch-controller.touch-editing{filter:drop-shadow(0 3px 7px #0004)}
+}
+@media(max-height:480px){
+ .layout-editor{top:60px;max-height:calc(100dvh - 65px);width:min(285px,calc(100vw - 18px))}
+}
