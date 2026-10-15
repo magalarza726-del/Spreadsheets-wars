@@ -6,9 +6,13 @@ export const MAPS = Object.freeze({
 });
 
 export const DURATIONS = Object.freeze({
-  bala: {label: 'Bala', seconds: 60},
-  blitz: {label: 'Blitz', seconds: 120},
+  bala: {label: 'Bala', seconds: 90},
   rapida: {label: 'Rápida', seconds: 180}
+});
+export const TERRAINS = Object.freeze({
+  normal: {label:'Normal', description:'Todas las celdas están disponibles.'},
+  everest: {label:'Everest', description:'Cada 4 segundos caen celdas simétricas.'},
+  crater: {label:'Cráter', description:'Una X de terreno caído ocupa el 10 % del mapa.'}
 });
 
 export const DIFFICULTIES = Object.freeze({
@@ -41,11 +45,16 @@ export const columnLabel = (index) => {
 };
 
 export class SpreadsheetBattle {
-  constructor({size = 30, seconds = 120, againstComputer = false, difficulty = 'normal', random = Math.random} = {}) {
+  constructor({size = 30, seconds = 90, mode = 'bala', terrain = 'normal', againstComputer = false, difficulty = 'normal', random = Math.random} = {}) {
     if (!Number.isInteger(size) || size < 4 || !Number.isFinite(seconds) || seconds <= 0) throw new Error('Configuración de partida no válida');
     if (!DIFFICULTIES[difficulty]) throw new Error('Dificultad desconocida');
+    if (!DURATIONS[mode] || !TERRAINS[terrain]) throw new Error('Mapa o modo desconocido');
     this.size = size;
     this.seconds = seconds;
+    this.mode = mode;
+    this.terrain = terrain;
+    this.blocked = new Uint8Array(size * size);
+    this.nextCollapse = 4;
     this.againstComputer = againstComputer;
     this.difficulty = difficulty;
     this.random = random;
@@ -57,7 +66,8 @@ export class SpreadsheetBattle {
     this.counts = [size * size, 0, 0];
     this.events = [];
     this.pickups = [];
-    this.nextSpawn = 10;
+    this.nextSpawn = mode === 'rapida' ? 30 : 10;
+    this.suddenDeath = false;
     this.pickupId = 0;
     this.players = [
       {id: 1, x: 1, y: 1, dx: 1, dy: 0, effects: Object.create(null), returnPosition: null},
@@ -65,12 +75,59 @@ export class SpreadsheetBattle {
     ];
     this.paint(1, 1, 1);
     this.paint(size - 2, size - 2, 2);
+    if (terrain === 'crater') this.generateCrater();
   }
 
   at(x, y) { return this.owner[y * this.size + x]; }
+  isBlocked(x, y) { return this.inBounds(x,y) && this.blocked[y*this.size+x] === 1; }
+  canEnter(x, y) { return this.inBounds(x,y) && !this.isBlocked(x,y); }
+  get playableCells() {return this.size*this.size-this.blocked.reduce((n,v)=>n+v,0);}
+  collapse(x,y) {
+    if (!this.canEnter(x,y) || this.players.some(p=>p.x===x&&p.y===y || p.returnPosition?.x===x&&p.returnPosition?.y===y)) return false;
+    const index=y*this.size+x,old=this.owner[index];
+    this.counts[old]--;
+    this.owner[index]=0;
+    this.blocked[index]=1;
+    this.pickups=this.pickups.filter(item=>item.x!==x||item.y!==y);
+    return true;
+  }
+  generateCrater() {
+    const limit=Math.round(this.size*this.size*.1);
+    const half=Math.floor(this.size*.38);
+    const mid=(this.size-1)/2;
+    const candidates=[];
+    for(let y=0;y<this.size;y++)for(let x=0;x<this.size;x++){
+      const dx=Math.abs(x-mid),dy=Math.abs(y-mid);
+      if(Math.max(dx,dy)>half)continue;
+      if ((x<=3&&y<=3)||(x>=this.size-4&&y>=this.size-4)) continue;
+      candidates.push({x,y,d:Math.abs(dx-dy),length:Math.max(dx,dy)});
+    }
+    candidates.sort((a,b)=>a.d-b.d||a.length-b.length||a.y-b.y||a.x-b.x);
+    for(const c of candidates){
+      if(this.size*this.size-this.playableCells>=limit)break;
+      this.collapse(c.x,c.y);
+    }
+  }
+  collapseEverest() {
+    const available=[];
+    for(let y=0;y<this.size;y++)for(let x=0;x<this.size;x++){
+      const mirror=mirrorCell(x,y,this.size);
+      if(y*this.size+x>=mirror.y*this.size+mirror.x)continue;
+      if(!this.canEnter(x,y)||!this.canEnter(mirror.x,mirror.y))continue;
+      const reserved=this.players.some(p=>[p, p.returnPosition].filter(Boolean).some(pos=>
+        pos.x===x&&pos.y===y || pos.x===mirror.x&&pos.y===mirror.y));
+      if(!reserved)available.push({x,y,mirror});
+    }
+    if(!available.length)return false;
+    const target=available[Math.min(available.length-1,Math.floor(this.random()*available.length))];
+    this.collapse(target.x,target.y);
+    this.collapse(target.mirror.x,target.mirror.y);
+    this.events.push({kind:'collapse',x:target.x,y:target.y,mirror:target.mirror});
+    return true;
+  }
   inBounds(x, y) { return x >= 0 && y >= 0 && x < this.size && y < this.size; }
   paint(x, y, id) {
-    if (!this.inBounds(x, y)) return false;
+    if (!this.canEnter(x, y)) return false;
     const index = y * this.size + x;
     const previous = this.owner[index];
     if (previous === id) return false;
@@ -133,7 +190,7 @@ export class SpreadsheetBattle {
     const player = this.players[playerId - 1];
     player.dx = dx; player.dy = dy;
     const x = player.x + dx, y = player.y + dy;
-    if (!this.inBounds(x, y)) return false;
+    if (!this.canEnter(x, y)) return false;
     player.x = x; player.y = y;
     this.paintMovement(playerId);
     this.collect(playerId);
@@ -165,8 +222,8 @@ export class SpreadsheetBattle {
       const candidates = [
         [rival.x + 1, rival.y], [rival.x - 1, rival.y],
         [rival.x, rival.y + 1], [rival.x, rival.y - 1]
-      ].filter(([x, y]) => this.inBounds(x, y));
-      const destination = candidates.sort((a,b) => this.at(a[0],a[1]) - this.at(b[0],b[1]))[0] ?? [rival.x, rival.y];
+      ].filter(([x, y]) => this.canEnter(x, y));
+      const destination = candidates.sort((a,b) => this.at(a[0],a[1]) - this.at(b[0],b[1]))[0] ?? [player.x, player.y];
       player.x = destination[0]; player.y = destination[1];
       this.paintMovement(playerId);
       this.events.push({kind:'teleport', playerId, x: player.x, y: player.y});
@@ -181,6 +238,7 @@ export class SpreadsheetBattle {
         const mirror = mirrorCell(x, y, this.size);
         // One random candidate per mirrored pair; both sites must be free of players/pickups.
         if (y * this.size + x >= mirror.y * this.size + mirror.x) continue;
+        if (!this.canEnter(x,y) || !this.canEnter(mirror.x,mirror.y)) continue;
         if (this.players.some(p => (p.x === x && p.y === y) || (p.x === mirror.x && p.y === mirror.y))) continue;
         if (this.pickups.some(p => (p.x === x && p.y === y) || (p.x === mirror.x && p.y === mirror.y))) continue;
         available.push({x, y, mirror});
@@ -200,9 +258,18 @@ export class SpreadsheetBattle {
   advance(dt) {
     if (!this.running || this.paused || !Number.isFinite(dt) || dt <= 0) return;
     this.elapsed = Math.min(this.seconds, this.elapsed + dt);
-    while (this.nextSpawn <= this.elapsed + 1e-8) {
-      this.spawnMirroredPair();
-      this.nextSpawn += 10;
+    while (this.nextSpawn <= this.elapsed + 1e-8 && this.nextSpawn < this.seconds) {
+      // Bala: one symmetric pair every 10s, then every 5s during sudden death.
+      // Rápida: three symmetric pairs at once every 30s.
+      for (let n=0;n<(this.mode==='rapida'?3:1);n++)this.spawnMirroredPair();
+      this.nextSpawn += this.mode==='rapida'?30:(this.nextSpawn>=this.seconds-30?5:10);
+    }
+    if(this.mode==='bala' && !this.suddenDeath && this.remaining<=30){
+      this.suddenDeath=true;
+      this.events.push({kind:'suddenDeath'});
+    }
+    if(this.terrain==='everest') while(this.nextCollapse<=this.elapsed+1e-8 && this.nextCollapse<this.seconds){
+      this.collapseEverest();this.nextCollapse+=4;
     }
     for (const p of this.players) {
       if (p.returnPosition && !this.hasEffect(p.id, 'indice')) {
@@ -224,7 +291,7 @@ export class SpreadsheetBattle {
   }
 
   get remaining() { return Math.max(0, this.seconds - this.elapsed); }
-  get percentages() { const total = this.size * this.size; return this.counts.map(value => value * 100 / total); }
+  get percentages() { const total = Math.max(1,this.playableCells); return this.counts.map(value => value * 100 / total); }
   drainEvents() { return this.events.splice(0); }
 }
 
@@ -233,7 +300,7 @@ export function chooseComputerDirection(game, level = 'normal', memory = {}, ran
   if (!DIFFICULTIES[level]) throw new Error('Dificultad desconocida');
   const cpu = game.players[1];
   const options = [[1,0],[-1,0],[0,1],[0,-1]]
-    .filter(([dx,dy]) => game.inBounds(cpu.x + dx, cpu.y + dy));
+    .filter(([dx,dy]) => game.canEnter(cpu.x + dx, cpu.y + dy));
   if (options.length === 0) return [0,0];
   const rand = () => Math.min(0.999999, Math.max(0, random()));
   if (!memory.visits || memory.visits.length !== game.size * game.size) {
@@ -257,6 +324,7 @@ export function chooseComputerDirection(game, level = 'normal', memory = {}, ran
   const pickupAt = new Set(game.pickups.map(p => p.y * game.size + p.x));
 
   for (let y = 0; y < game.size; y++) for (let x = 0; x < game.size; x++) {
+    if(game.isBlocked(x,y))continue;
     const dist = Math.abs(x-cpu.x) + Math.abs(y-cpu.y);
     if (dist === 0 || dist > range) continue;
     const power = pickupAt.has(y*game.size+x);
@@ -265,7 +333,7 @@ export function chooseComputerDirection(game, level = 'normal', memory = {}, ran
     let nearby = 0;
     if (clusterWeight) {
       for (let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) {
-        if ((ox || oy) && game.inBounds(x+ox,y+oy)) nearby += nonOwned(x+ox,y+oy);
+        if ((ox || oy) && game.canEnter(x+ox,y+oy)) nearby += nonOwned(x+ox,y+oy);
       }
     }
     const value = ownGain * 3 + nearby * clusterWeight + (power ? pickupWeight : 0);
@@ -280,7 +348,7 @@ export function chooseComputerDirection(game, level = 'normal', memory = {}, ran
     let local = nonOwned(x,y)*2 - visit(x,y)*visitWeight;
     if (level === 'dificil' || level === 'experto') {
       for(const [sx,sy] of [[1,0],[-1,0],[0,1],[0,-1]])
-        if(game.inBounds(x+sx,y+sy)) local+=nonOwned(x+sx,y+sy)*clusterWeight*0.4;
+        if(game.canEnter(x+sx,y+sy)) local+=nonOwned(x+sx,y+sy)*clusterWeight*0.4;
     }
     const score = toward * (level === 'principiante' ? 2.5 : 8) + local
       - (reverse([dx,dy]) ? 3 : 0) + (pickupAt.has(y*game.size+x) ? pickupWeight : 0)
