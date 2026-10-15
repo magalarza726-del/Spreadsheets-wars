@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#107c41">
+  <meta name="description" content="Spreadsheets Wars: conquista celdas en una batalla inspirada en Excel. Juega con un amigo o contra la computadora.">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Spreadsheets Wars — Libro1</title>
+</head>
+<body>
+<div id="app">
+  <section id="homeScreen" class="home-screen" aria-label="Pantalla principal">
+    <header class="home-topbar">
+      <div class="home-brand"><span class="brand-icon" aria-hidden="true">SW</span><span>Spreadsheets <strong>Wars</strong></span></div>
+      <div class="home-top-actions"><span class="version-tag">EDICIÓN 1.0</span><span class="profile-bubble">SW</span></div>
+    </header>
+    <div class="home-workspace">
+      <aside class="home-sidebar">
+        <div class="sidebar-emblem"><span class="brand-icon brand-icon-large">SW</span><div><strong>Spreadsheets<br>Wars</strong><small>La batalla está en las celdas.</small></div></div>
+        <div class="sidebar-label">ARCHIVO</div>
+        <button class="sidebar-button selected" type="button"><span aria-hidden="true">⌂</span> Inicio</button>
+        <button class="sidebar-button" type="button" id="sidebarHelp"><span aria-hidden="true">ⓘ</span> Cómo jugar</button>
+        <div class="sidebar-bottom"><span class="small-asterisk">✳</span> INSPIRADO EN UNA HOJA DE CÁLCULO<br><small>Una experiencia original, sin relación con Microsoft.</small></div>
+      </aside>
+      <main class="home-content">
+        <div class="welcome"><div class="eyebrow"><span class="eyebrow-dot"></span> MULTIJUGADOR LOCAL · SIN CONEXIÓN</div><h1>El territorio se <em>escribe</em> celda por celda.</h1><p>Pinta el tablero, roba casillas al rival y aprovecha los power-ups que aparecen en posiciones reflejadas. Cuando acabe el tiempo, gana quien controle más celdas.</p></div>
+        <div class="section-heading"><h2>Nuevo libro de batalla</h2><span>Selecciona un modo para comenzar</span></div>
+        <div class="mode-cards">
+          <button type="button" class="mode-card" data-match="pvp">
+            <span class="mode-card-art art-versus"><span class="art-grid"></span><span class="art-left">J1</span><span class="art-vs">VS</span><span class="art-right">J2</span></span>
+            <span class="mode-label"><strong>J1 vs J2</strong><span class="card-arrow">↗</span></span>
+            <span class="mode-copy">Dos jugadores · Pantalla dividida verticalmente</span>
+            <span class="mode-foot"><span class="mini-pill">LOCAL</span> <span>Flechas + W A S D</span></span>
+          </button>
+          <button type="button" class="mode-card" data-match="ai">
+            <span class="mode-card-art art-computer"><span class="art-grid"></span><span class="art-left">J1</span><span class="art-vs">VS</span><span class="art-right art-robot">COM</span></span>
+            <span class="mode-label"><strong>J1 vs COM</strong><span class="card-arrow">↗</span></span>
+            <span class="mode-copy">Un jugador · Una pantalla con rival automático</span>
+            <span class="mode-foot"><span class="mini-pill">SOLO</span> <span>Teclas de dirección</span></span>
+          </button>
+        </div>
+        <div class="home-bottom-row">
+          <div class="tip-card"><div class="tip-icon">✦</div><div><strong>Las fórmulas ahora se encuentran en el mapa</strong><p>Cada 10 segundos aparecen dos power-ups idénticos en coordenadas opuestas. Atraviésalos para activarlos automáticamente.</p></div></div>
+          <div class="keyboard-guide"><strong>Controles rápidos</strong><div><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span>J1</span></div><div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>J2</span></div></div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="game-screen hidden" aria-label="Partida">
+    <header class="excel-topbar">
+      <div class="title-left"><span class="brand-icon excel-brand-icon">SW</span><span class="file-title">Spreadsheets Wars — Libro1</span><span class="saved-state">✓ Guardado localmente</span></div>
+      <div class="excel-search"><span class="search-glyph">⌕</span> Buscar comandos</div>
+      <div class="title-right"><span class="profile-bubble">SW</span><span class="win-decoration">−</span><span class="win-decoration">▢</span><span class="win-decoration">×</span></div>
+    </header>
+    <nav class="excel-ribbon" aria-label="Pestañas de Excel">
+      <div class="ribbon-tabs">
+        <button class="excel-tab" data-tab="Archivo">Archivo</button>
+        <button class="excel-tab active" data-tab="Inicio">Inicio</button>
+        <button class="excel-tab" data-tab="Insertar">Insertar</button>
+        <button class="excel-tab" data-tab="Dibujar">Dibujar</button>
+        <button class="excel-tab" data-tab="Disposición de página">Disposición de página</button>
+        <button class="excel-tab" data-tab="Fórmulas">Fórmulas</button>
+        <button class="excel-tab" data-tab="Datos">Datos</button>
+        <button class="excel-tab" data-tab="Revisar">Revisar</button>
+        <button class="excel-tab" data-tab="Vista">Vista</button>
+        <button class="excel-tab" data-tab="Automatizar">Automatizar</button>
+        <button class="excel-tab" data-tab="Ayuda">Ayuda</button>
+      </div>
+      <div class="game-buttons"><button type="button" class="ribbon-action" id="pauseBtn">Ⅱ Pausa</button><button type="button" class="ribbon-action ribbon-exit" id="exitBtn">↩ Salir</button></div>
+    </nav>
+    <div class="conquest-line" role="group" aria-label="Barra de conquista">
+      <div class="name-box" id="selectedCell">B2 <span>⌄</span></div>
+      <div class="formula-fx" aria-hidden="true">✦</div>
+      <div class="conquest-card"><div class="conquest-names"><span class="score-tag blue"><span class="color-dot"></span> J1 <strong id="scoreOne">1</strong></span><span class="bar-label">BARRA DE CONQUISTA</span><span class="score-tag orange"><span class="color-dot"></span> <span id="opponentTag">J2</span> <strong id="scoreTwo">1</strong></span></div><div class="territory-bar" aria-label="Territorio conquistado"><div id="fillOne" class="territory-blue"></div><div id="fillNeutral" class="territory-neutral"></div><div id="fillTwo" class="territory-orange"></div></div></div>
+      <div class="timer-display"><span class="timer-caption">TIEMPO RESTANTE</span><strong id="gameTimer">02:00</strong></div>
+    </div>
+    <div class="match-info-row"><div class="match-info"><span class="live-indicator"></span> <span id="currentMode">BLITZ · 30 × 30</span><span class="match-divider">|</span><span id="matchFormat">J1 vs J2</span></div><span class="spawn-timer">Próximos power-ups en <strong id="spawnCountdown">10 s</strong></span></div>
+    <div class="play-area" id="playArea"></div>
+    <div class="minimap-widget" id="minimapWidget"><div class="minimap-heading"><strong>VISTA GENERAL</strong><span id="miniSize">30 × 30</span></div><canvas id="minimapCanvas" width="190" height="190" aria-label="Minimapa del territorio"></canvas><div class="minimap-legend"><span><i class="legend-color legend-blue"></i>J1</span><span><i class="legend-color legend-orange"></i><span id="miniOpponent">J2</span></span><span><i class="legend-color legend-green"></i>Power-up</span></div></div>
+    <div class="excel-status"><div class="sheet-status"><span class="status-small">◀</span><span class="status-small">▶</span><span class="sheet-tab"><span>▦</span> Hoja1</span><span class="status-add" title="Hoja de batalla">＋</span></div><div class="status-right"><span id="bottomStatus">Listo · Usa las flechas para pintar</span><span class="status-sep"></span><label class="zoom-label" for="zoomRange">Zoom</label><input type="range" id="zoomRange" min="65" max="130" step="5" value="100"><span id="zoomLabel">100%</span></div></div>
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+  </section>
+
+  <div class="modal-layer hidden" id="setupModal" role="dialog" aria-modal="true" aria-labelledby="setupHeading">
+    <div class="setup-dialog"><div class="modal-header"><div><span class="eyebrow">NUEVO LIBRO</span><h2 id="setupHeading">Configurar partida</h2></div><button type="button" class="icon-button" id="closeSetup" aria-label="Cerrar">×</button></div><p class="modal-description">Personaliza la batalla antes de abrir tu hoja de cálculo.</p><div class="dialog-label">MODO DE PARTIDA</div><div class="selected-match" id="selectedMatchText">J1 vs J2 · Dos jugadores locales</div><div class="dialog-label">TAMAÑO Y DURACIÓN</div><div class="mode-option-list" id="modeOptionList"><label class="size-choice"><input type="radio" name="sizeChoice" value="bala"><span class="size-preview size-20"></span><span class="size-details"><strong>Bala</strong><small>20 × 20 celdas · 400 casillas</small></span><span class="duration-chip">01:00</span></label><label class="size-choice selected"><input type="radio" name="sizeChoice" value="blitz" checked><span class="size-preview size-30"></span><span class="size-details"><strong>Blitz</strong><small>30 × 30 celdas · 900 casillas</small></span><span class="duration-chip">02:00</span></label><label class="size-choice"><input type="radio" name="sizeChoice" value="rapida"><span class="size-preview size-60"></span><span class="size-details"><strong>Rápida</strong><small>60 × 60 celdas · 3.600 casillas</small></span><span class="duration-chip">03:00</span></label></div><div class="modal-hint">✦ Los power-ups se generan en parejas simétricas cada 10 segundos.</div><div class="modal-footer"><button type="button" class="secondary-button" id="cancelSetup">Cancelar</button><button type="button" class="primary-button" id="startGame">Crear partida <span>→</span></button></div></div>
+  </div>
+
+  <div class="modal-layer hidden" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="small-dialog"><div class="pause-emblem">Ⅱ</div><h2 id="pauseHeading">Partida en pausa</h2><p>Tu libro de batalla está esperando. Pulsa Escape o continúa cuando quieras.</p><button type="button" class="primary-button full-width" id="resumeBtn">Reanudar partida →</button><button type="button" class="secondary-button full-width" id="pauseExitBtn">Volver al menú</button></div></div>
+
+  <div class="modal-layer hidden" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsHeading"><div class="results-dialog"><span class="result-eyebrow">PARTIDA FINALIZADA</span><div class="result-trophy">✦</div><h2 id="resultsHeading">¡Jugador 1 gana!</h2><p id="resultsSubtitle">El territorio pertenece a quien deja su color.</p><div class="results-score"><div><span class="results-dot blue-dot"></span><strong id="resultScore1">0</strong><small>J1 · celdas</small></div><span class="results-divider">VS</span><div><span class="results-dot orange-dot"></span><strong id="resultScore2">0</strong><small id="resultOpponent">J2 · celdas</small></div></div><div class="results-actions"><button class="primary-button" id="playAgainBtn" type="button">Revancha ↺</button><button class="secondary-button" id="resultsHomeBtn" type="button">Menú principal</button></div></div></div>
+  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></p></div><div><h3>J2</h3><p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>Bomba</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 10 s.</p><p>× <b>PRODUCTO</b> — 9 celdas, 4 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 6 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 2 s.</p><p>↗ <b>ÍNDICE</b> — salto temporal cerca del rival, 3 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
+</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
