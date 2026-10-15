@@ -40,3 +40,12 @@
 .setup-dialog .modal-hint{margin-top:10px;padding:8px 12px}
 .setup-dialog .modal-footer{margin-top:15px}
 @media(max-width:620px){.setup-dialog{padding:18px}.config-grid{grid-template-columns:1fr;gap:0}.difficulty-options{grid-template-columns:1fr 1fr}.time-choice{min-height:48px}.modal-layer{padding:9px}.setup-dialog{max-height:calc(100dvh - 18px)}}
+
+/* Compact, Excel-style soundtrack controls in the ribbon */
+.music-controls{display:flex;align-items:center;gap:5px;border-left:1px solid #d5dbd8;padding-left:10px;min-width:0}
+.music-track{font:11px "Aptos","Segoe UI",Arial,sans-serif;color:#486659;max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music-small-button{min-width:30px!important;padding:4px 6px!important;line-height:1.1}
+.music-small-button:disabled{opacity:.4}
+#musicVolume{width:67px;accent-color:#107c41;cursor:pointer}
+@media(max-width:920px){.music-track{max-width:80px}#musicVolume{width:50px}}
+@media(max-width:650px){.music-track{display:none}.music-controls{padding-left:3px;gap:1px}#musicVolume{width:40px}}
