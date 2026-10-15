@@ -107,3 +107,10 @@ Se recibieron **seis MP3 diferentes**, no siete. Esta es la estructura necesaria
 | Pulso de Acero | `music/pulso-de-acero.mp3` |
 
 Los archivos MP3 están incluidos en el ZIP completo de la V1.4. **Para reproducirlos en GitHub Pages hay que subir también los seis MP3 a la carpeta `music/` del repositorio.** El conector de edición de código no permitió adjuntar automáticamente archivos binarios grandes. Hasta entonces, el sitio muestra que la música no está disponible, sin interrumpir el juego. Cuando se entregue la séptima canción, añádela a `music/` y al arreglo `TRACKS` de `music.js`.
+
+
+## Biblioteca musical desde Configurar partida (V1.5)
+
+En **Configurar partida → Música de la partida → Añadir canciones** se pueden seleccionar varios archivos de audio del dispositivo (MP3, M4A, AAC, WAV, OGG, FLAC y WebM, siempre que el navegador reproduzca el formato; máximo 45 MB por pista). Las canciones aparecen en una lista y se pueden eliminar con **×**. Cuando el jugador añade canciones, se usan esas pistas; alternativamente puede elegir **Solo música incluida** si la carpeta `music/` está publicada. En ambas opciones la selección es aleatoria, sin repetir una canción hasta completar la lista.
+
+Los archivos personales **no se envían al repositorio ni a ningún servidor**. Se almacenan con **IndexedDB** en el propio navegador para reutilizarlos en futuras partidas y visitas desde el mismo origen web. Si el navegador bloquea este almacenamiento, las canciones siguen disponibles durante la sesión actual y la interfaz lo advierte; borrar los datos del sitio también elimina la biblioteca. Para usar la música incluida en GitHub Pages hay que publicar sus MP3 una sola vez; **importar canciones desde el menú no requiere cargar ningún MP3 a GitHub**. La funcionalidad no convierte el juego en PWA, por lo que recargar la web sin conexión puede requerir que el navegador ya conserve los archivos del sitio.
