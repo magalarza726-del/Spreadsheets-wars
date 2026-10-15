@@ -82,7 +82,7 @@ export class SpreadsheetBattle {
     return Math.max(0, (this.players[playerId - 1].effects[type] ?? 0) - this.elapsed);
   }
 
-  movementInterval(playerId) { return this.hasEffect(playerId, 'promedio') ? 125 : 250; }
+  movementInterval(playerId) { return this.hasEffect(playerId, 'promedio') ? 50 : 100; }
 
   paintingOwner(playerId) {
     return this.hasEffect(3 - playerId, 'concatenar') ? 3 - playerId : playerId;
