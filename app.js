@@ -1,6 +1,7 @@
-import {SpreadsheetBattle, MAPS, DURATIONS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection} from './core.js';
+import {SpreadsheetBattle, MAPS, DURATIONS, TERRAINS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection} from './core.js';
 import {BattleMusic, TRACKS} from './music.js';
 import {AudioLibrary} from './music-library.js';
+import {attachTouchControls} from './touch-controls.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -30,7 +31,10 @@ const CELL_W = 83, CELL_H = 23, COL_HEADER = 22, ROW_HEADER = 39;
 
 let selectedMatch = 'pvp';
 let selectedMap = 'pequeno';
-let selectedDuration = 'blitz';
+let selectedDuration = 'bala';
+let selectedTerrain = 'normal';
+let selectedTouch = 'none';
+let touchVectors = {1:null,2:null};
 let selectedDifficulty = 'normal';
 let session = null;
 let zoom = 1;
@@ -53,10 +57,10 @@ function setupMatch(kind) {
   void loadMusicLibrary();
 }
 function getMatchSeconds() {
-  return selectedDuration === 'custom' ? Math.round(Number($('#customMinutes').value)*60) : DURATIONS[selectedDuration].seconds;
+  return DURATIONS[selectedDuration].seconds;
 }
 function updateChoices() {
-  for(const [name,selector] of [['sizeChoice','.size-choice'],['durationChoice','.time-choice'],['difficultyChoice','.difficulty-choice']]) {
+  for(const [name,selector] of [['sizeChoice','.size-choice'],['durationChoice','.time-choice'],['difficultyChoice','.difficulty-choice'],['terrainChoice','.terrain-choice']]) {
     $$(`${selector}`).forEach(label=>{
       const input=$('input[type="radio"]',label);
       label.classList.toggle('selected',input.checked);
@@ -64,22 +68,21 @@ function updateChoices() {
         if(name==='sizeChoice')selectedMap=input.value;
         if(name==='durationChoice')selectedDuration=input.value;
         if(name==='difficultyChoice')selectedDifficulty=input.value;
+        if(name==='terrainChoice')selectedTerrain=input.value;
       }
     });
   }
   const map=MAPS[selectedMap];
   const seconds=getMatchSeconds();
-  const valid=Number.isFinite(seconds)&&seconds>=30&&seconds<=900;
-  $('#customMinutes').setCustomValidity(valid?'':'Selecciona entre 0,5 y 15 minutos');
+  const valid=Number.isFinite(seconds)&&seconds>0;
   $('#startGame').disabled=!valid;
-  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${valid?formatTime(seconds):'Tiempo no válido'} · ${selectedMatch==='ai'?`J1 25 c/s · COM ${DIFFICULTIES[selectedDifficulty].label} ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 celdas/s'}`;
+  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${TERRAINS[selectedTerrain].label} · ${valid?formatTime(seconds):'Tiempo no válido'} · ${selectedMatch==='ai'?`J1 25 c/s · COM ${DIFFICULTIES[selectedDifficulty].label} ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 celdas/s'}`;
 }
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
 $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
-$$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
-$('#customMinutes').addEventListener('focus',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
-$('#customMinutes').addEventListener('input',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
+$$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"], input[name="terrainChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
+$$('input[name="touchChoice"]').forEach(input=>input.addEventListener('change',()=>{selectedTouch=$('input[name="touchChoice"]:checked').value;}));
 
 const libraryInput = $('#addMusicFiles');
 const libraryList = $('#localMusicList');
@@ -140,6 +143,7 @@ function pickMatchTracks() {
   return chooseMusic.value === 'default' || !personal.length ? TRACKS : personal;
 }
 $('#sidebarHelp').addEventListener('click',()=>toggle(help,true));
+$('#sidebarPowerGuide').addEventListener('click',()=>toggle(help,true));
 $('#closeHelp').addEventListener('click',()=>toggle(help,false));
 $('#helpOk').addEventListener('click',()=>toggle(help,false));
 
@@ -150,6 +154,11 @@ function buildView(playerId) {
   const label = isComputer ? 'COM' : `J${playerId}`;
   pane.innerHTML = `<div class="player-bar"><div class="player-identity"><span class="player-chip ${playerId===2?'orange':''}">${label}</span><span class="player-controls">${playerId===1?'↑ ← ↓ →':isComputer?'Rival automático':'W A S D'}</span></div><div class="active-powerups" aria-label="Habilidades activas"></div></div><div class="sheet-surface"><canvas class="sheet-canvas" aria-label="Hoja de cálculo del jugador ${label}"></canvas><div class="sheet-scrollhint"><div class="scroll-marker"></div></div></div>`;
   playArea.appendChild(pane);
+  if(selectedTouch!=='none')attachTouchControls(pane,playerId,selectedTouch,vector=>{
+    touchVectors[playerId]=vector;
+    if(vector)attemptMove(playerId,performance.now());
+    else if(session)session.lastMoved[playerId]=-Infinity;
+  });
   const surface = $('.sheet-surface',pane);
   const canvas = $('.sheet-canvas',pane);
   const ctx = canvas.getContext('2d',{alpha:false});
@@ -170,11 +179,11 @@ function buildView(playerId) {
 function getCellDims() {return [Math.round(CELL_W*zoom),Math.round(CELL_H*zoom)];}
 function startMatch() {
   const map=MAPS[selectedMap], seconds=getMatchSeconds();
-  if(!Number.isFinite(seconds)||seconds<30||seconds>900)return;
-  const battle=new SpreadsheetBattle({size:map.size,seconds,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
-  session={game:battle,map:selectedMap,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
+  if(!Number.isFinite(seconds)||seconds<=0)return;
+  const battle=new SpreadsheetBattle({size:map.size,seconds,mode:selectedDuration,terrain:selectedTerrain,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
+  session={game:battle,map:selectedMap,terrain:selectedTerrain,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
   zoom=1;$('#zoomRange').value='100';$('#zoomLabel').textContent='100%';
-  keys.clear();keyOrder={1:[],2:[]};
+  keys.clear();keyOrder={1:[],2:[]};touchVectors={1:null,2:null};
   toasts.forEach(clearTimeout);toasts=[];$('#toastContainer').replaceChildren();
   playArea.replaceChildren();
   playArea.classList.toggle('split',selectedMatch==='pvp');
@@ -183,7 +192,7 @@ function startMatch() {
   $('#opponentTag').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniOpponent').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniSize').textContent=`${map.size} × ${map.size}`;
-  $('#currentMode').textContent=`${map.label.toUpperCase()} · ${map.size} × ${map.size} · ${formatTime(seconds)}`;
+  $('#currentMode').textContent=`${TERRAINS[selectedTerrain].label.toUpperCase()} · ${map.size} × ${map.size} · ${DURATIONS[selectedDuration].label.toUpperCase()} · ${formatTime(seconds)}`;
   $('#matchFormat').textContent=selectedMatch==='ai'?`J1 vs COM · ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2';
   $('#bottomStatus').textContent='Listo · Mueve tu selección para pintar';
   $('.excel-tab.active')?.classList.remove('active');
@@ -225,7 +234,7 @@ $('#zoomRange').addEventListener('input',event=>{zoom=Number(event.target.value)
 
 function returnHome() {
   music.stop();
-  session=null;keys.clear();keyOrder={1:[],2:[]};
+  session=null;keys.clear();keyOrder={1:[],2:[]};touchVectors={1:null,2:null};
   toggle(results,false);toggle(pauseDialog,false);toggle(gameScreen,false);toggle(home,true);
 }
 function switchPause() {
@@ -234,7 +243,7 @@ function switchPause() {
   if (session.game.paused) music.pause(); else music.resume();
   toggle(pauseDialog,session.game.paused);
   $('#pauseBtn').textContent=session.game.paused?'▶ Continuar':'Ⅱ Pausa';
-  keys.clear();keyOrder={1:[],2:[]};
+  keys.clear();keyOrder={1:[],2:[]};touchVectors={1:null,2:null};
   lastFrame=performance.now();
 }
 function pauseOnBlur() {
@@ -283,7 +292,7 @@ function attemptMove(playerId,time) {
   if(!session?.game.running || session.game.paused) return;
   const game=session.game;
   const isAI=playerId===2 && session.match==='ai';
-  if(!isAI && !keyOrder[playerId].length) {
+  if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId]) {
     session.lastMoved[playerId]=-Infinity;
     return;
   }
@@ -292,7 +301,7 @@ function attemptMove(playerId,time) {
   // Handle sub-frame steps (especially PROMEDIO: 20 ms) without skipping any cell.
   let steps=0;
   while(time-session.lastMoved[playerId]>=interval-0.5 && steps<12){
-    const direction=isAI?computerDirection(game):DIRECTIONS[keyOrder[playerId].at(-1)];
+    const direction=isAI?computerDirection(game):(touchVectors[playerId]||DIRECTIONS[keyOrder[playerId].at(-1)]);
     if(!direction)break;
     const didMove=game.move(playerId,...direction);
     session.lastMoved[playerId]+=interval;
@@ -348,7 +357,12 @@ function drawSheet(view,dt,time) {
     for(let col=firstCol;col<lastCol;col++){
       const x=Math.round(ROW_HEADER+col*cellW-view.cameraX),y=Math.round(COL_HEADER+row*cellH-view.cameraY);
       const owner=game.at(col,row);
-      ctx.fillStyle=CELL_COLORS[owner];ctx.fillRect(x,y,cellW,cellH);
+      ctx.fillStyle=game.isBlocked(col,row)?'#484f56':CELL_COLORS[owner];ctx.fillRect(x,y,cellW,cellH);
+      if(game.isBlocked(col,row)){
+        ctx.strokeStyle='#717b83';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(x+4,y+3);ctx.lineTo(x+cellW-4,y+cellH-3);
+        ctx.moveTo(x+cellW-4,y+3);ctx.lineTo(x+4,y+cellH-3);ctx.stroke();
+      }
       ctx.strokeStyle='#e3e5e7';ctx.lineWidth=.65;ctx.strokeRect(x+.5,y+.5,cellW,cellH);
     }
   }
@@ -407,7 +421,7 @@ function drawMinimap() {
   ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
     const owner=game.at(x,y);
-    ctx.fillStyle=owner===0?'#f2f4f3':PLAYER_COLORS[owner];
+    ctx.fillStyle=game.isBlocked(x,y)?'#484f56':owner===0?'#f2f4f3':PLAYER_COLORS[owner];
     ctx.fillRect(x*step,y*step,Math.ceil(step+.05),Math.ceil(step+.05));
   }
   for(const pickup of game.pickups){
@@ -436,6 +450,8 @@ function updateHUD() {
   $('#fillTwo').style.width=`${j2}%`;
   $('#gameTimer').textContent=formatTime(game.remaining);
   $('.timer-display').classList.toggle('urgent',game.remaining<=15);
+  $('.timer-display').classList.toggle('sudden-death',game.suddenDeath);
+  $('#bottomStatus').textContent=game.suddenDeath?'⚡ MUERTE SÚBITA · ¡Power-ups cada 5 segundos!':game.terrain==='everest'?'▥ Everest: el terreno se desploma':'Listo · Conquista las celdas';
   $('#spawnCountdown').textContent=game.running?`${Math.max(0,Math.ceil(game.nextSpawn-game.elapsed))} s`:'—';
   for(const view of session.views){
     const current=Object.keys(POWERUPS).filter(k=>game.hasEffect(view.playerId,k));
@@ -454,6 +470,8 @@ function handleEvents() {
   if(!session)return;
   for(const event of session.game.drainEvents()) {
     if(event.kind==='spawn')showToast('✦ Power-ups',`${POWERUPS[event.type].name} en espejo`);
+    if(event.kind==='suddenDeath')showToast('⚡ Muerte súbita','¡Doble frecuencia de poderes!');
+    if(event.kind==='collapse')showToast('▥ Everest','Dos celdas han caído');
     if(event.kind==='pickup')showToast(event.playerId===1?'J1 obtuvo':'J2 obtuvo',POWERUPS[event.type].name,event.playerId===1?'blue':'orange');
     if(event.kind==='end')displayResults();
   }
@@ -481,7 +499,7 @@ function loop(time) {
     game.advance(delta);
     if(game.running){
       attemptMove(1,time);
-      if(session.match==='ai'||keyOrder[2].length)attemptMove(2,time);
+      if(session.match==='ai'||keyOrder[2].length||touchVectors[2])attemptMove(2,time);
     }
     handleEvents();
   }
