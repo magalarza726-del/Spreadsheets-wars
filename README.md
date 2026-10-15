@@ -42,3 +42,9 @@ El **ZIP completo entregado contiene los seis MP3 originales, sin recortes**, en
 ## Desarrollo
 
 HTML, CSS, JavaScript ES Modules y Canvas 2D; GitHub Pages. Ejecuta `npm test` en Node.js para validar el motor, las reglas, la IA, la biblioteca de música y las regresiones de interfaz.
+
+## Mejoras móviles V1.8
+La partida se adapta a teléfonos tanto en horizontal como en vertical: cinta de Excel y HUD compactos, minimapa ocultable desde **▦ Mapa**, controles táctiles más pequeños, zoom inicial del 75 % y respeto de las áreas seguras. En J1 vs J2 vertical las hojas se apilan para facilitar el uso. El joystick se selecciona automáticamente en móviles salvo que el jugador haya guardado otra preferencia (No / Joystick / Flechas).
+
+### Música predeterminada
+Los seis MP3 completos siguen **incluidos en el ZIP descargable**, dentro de `music/`. El conector disponible de GitHub no admite cargar directamente estos archivos binarios grandes; mientras no estén subidos a `music/` en GitHub, el sitio publicado permite añadir canciones desde la configuración, pero no puede reproducir las predeterminadas ausentes. Para llevarlas a Pages se deben transferir los archivos originales a ese directorio. No hay que modificar más código.
