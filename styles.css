@@ -11,3 +11,32 @@
 @media(max-width:1080px){.home-sidebar{width:215px}.home-content{padding:30px 28px 45px}.saved-state{display:none}.excel-tab{padding:0 9px}.minimap-widget{width:164px;padding:7px}.minimap-widget canvas{width:148px;height:148px}.minimap-legend{font-size:8px;gap:4px}.no-powerups{display:none}.bar-label{font-size:8px}}
 @media(max-width:720px){.home-workspace{display:block;overflow:auto}.home-sidebar{width:100%;height:auto;display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px}.sidebar-emblem{margin:0 auto 0 0}.sidebar-emblem small,.sidebar-label,.sidebar-bottom{display:none}.sidebar-button{width:auto;flex:none;padding:10px;font-size:11px;margin:0}.home-content{overflow:visible;padding:30px 17px}.home-screen{overflow-y:auto}.mode-cards,.home-bottom-row{grid-template-columns:1fr}.section-heading{margin-top:30px}.section-heading>span{display:none}.welcome h1{font-size:32px}.excel-topbar{height:42px;min-height:42px}.excel-search,.win-decoration,.title-right .profile-bubble{display:none}.excel-ribbon{height:39px;min-height:39px}.excel-tab{height:38px;font-size:12px}.ribbon-action{padding:6px;font-size:10px}.conquest-line{gap:5px;padding:5px;height:56px;min-height:56px}.name-box{width:55px}.formula-fx{display:none}.timer-display{min-width:85px}.timer-caption{font-size:7px}.timer-display strong{font-size:18px}.bar-label{display:none}.match-info-row{font-size:9px}.spawn-timer{font-size:9px}.minimap-widget{right:12px;bottom:45px}.status-right #bottomStatus{display:none}.player-identity .player-controls{display:none}}
 @media(max-height:690px){.home-content{padding-top:24px}.welcome h1{font-size:34px}.section-heading{margin-top:23px}.mode-card-art{height:108px}.home-bottom-row{margin-top:14px}.minimap-widget{width:157px;padding:6px}.minimap-widget canvas{width:143px;height:143px}.minimap-legend{font-size:7px}}
+
+/* Version 1.1: three independent match settings, Excel-inspired compact dialog. */
+.setup-dialog{width:min(700px,100%);padding:24px 28px}
+.setup-dialog .modal-description{margin-bottom:12px}
+.config-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.config-section{min-width:0}
+.config-section .dialog-label{margin-top:16px}
+.config-section .mode-option-list{gap:7px}
+.config-section .size-choice{min-height:55px;padding:8px 11px;gap:10px}
+.config-section .size-preview{height:30px;width:30px}
+.size-50{background-size:4px 4px}.size-70{background-size:3px 3px}
+.time-options{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.time-choice,.difficulty-choice{position:relative;display:flex;align-items:center;gap:6px;border:1px solid #dfe7e2;background:#fff;border-radius:8px;padding:10px;cursor:pointer;min-height:55px}
+.time-choice{flex-direction:column;align-items:flex-start;justify-content:center}
+.time-choice input[type=radio],.difficulty-choice input[type=radio]{accent-color:var(--excel);position:absolute;top:10px;right:10px;margin:0}
+.time-choice span{font-size:11px;color:#75847a;padding-right:15px}.time-choice strong{font-size:15px;color:#294d37}
+.time-choice.selected,.difficulty-choice.selected{border-color:#2d9d61;box-shadow:0 0 0 1px #2d9d61;background:#f1faf4}
+.custom-time-entry{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.custom-time-entry input{width:55px;min-width:0;border:1px solid #b9d4c3;border-radius:4px;padding:4px 6px;color:#224e32;font-weight:700;background:#fff}
+.custom-time-entry input:focus-visible{outline:2px solid #63b68d}
+.difficulty-section .dialog-label{margin:16px 0 10px}
+.difficulty-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.difficulty-choice{flex-direction:column;align-items:flex-start;justify-content:center;padding:11px 9px;gap:5px;min-width:0}
+.difficulty-choice strong{font-size:11px;color:#27563e;padding-right:9px}
+.difficulty-choice small{font-size:10px;color:#7b8b80;line-height:1.3}
+.setup-summary{margin-top:15px;padding:10px 13px;background:#eaf6ee;border:1px solid #d4e8dc;border-radius:7px;color:#1e6540;font-weight:750;font-size:12px}
+.setup-dialog .modal-hint{margin-top:10px;padding:8px 12px}
+.setup-dialog .modal-footer{margin-top:15px}
+@media(max-width:620px){.setup-dialog{padding:18px}.config-grid{grid-template-columns:1fr;gap:0}.difficulty-options{grid-template-columns:1fr 1fr}.time-choice{min-height:48px}.modal-layer{padding:9px}.setup-dialog{max-height:calc(100dvh - 18px)}}
