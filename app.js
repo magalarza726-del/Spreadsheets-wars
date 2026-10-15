@@ -120,8 +120,21 @@ function startMatch() {
   showToast('Nuevo libro',`${map.label} · ${map.size} × ${map.size} · ${formatTime(seconds)}`);
   updateHUD();
 }
-$('#startGame').addEventListener('click',startMatch);
-$('#playAgainBtn').addEventListener('click',startMatch);
+function safeStartMatch() {
+  try {
+    startMatch();
+  } catch (error) {
+    console.error('Error al crear la partida:', error);
+    session = null;
+    $('#setupSummary').textContent = 'No se pudo iniciar la partida. Recarga la página y vuelve a intentarlo.';
+    $('#setupSummary').setAttribute('role', 'alert');
+    toggle(gameScreen, false);
+    toggle(home, true);
+    toggle(setup, true);
+  }
+}
+$('#startGame').addEventListener('click',safeStartMatch);
+$('#playAgainBtn').addEventListener('click',safeStartMatch);
 $('#exitBtn').addEventListener('click',returnHome);
 $('#pauseExitBtn').addEventListener('click',returnHome);
 $('#resultsHomeBtn').addEventListener('click',returnHome);
