@@ -62,7 +62,7 @@ function updateChoices() {
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
 $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
-$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
+$$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
 $('#customMinutes').addEventListener('focus',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
 $('#customMinutes').addEventListener('input',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
 $('#sidebarHelp').addEventListener('click',()=>toggle(help,true));
