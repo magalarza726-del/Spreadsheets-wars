@@ -1,0 +1,71 @@
+name: Build offline Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-apk.yml'
+      - 'index.html'
+      - 'app.js'
+      - 'core.js'
+      - 'styles.css'
+      - 'music.js'
+      - 'music-library.js'
+      - 'touch-controls.js'
+      - 'favicon.svg'
+      - 'music/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Verify website and offline assets
+        run: |
+          test -f index.html
+          test -f app.js
+          test -f android/app/src/main/AndroidManifest.xml
+          echo "MP3 files included in the APK:"
+          find music -maxdepth 1 -name '*.mp3' -printf '%f (%s bytes)\n' || true
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build offline debug APK
+        run: gradle --no-daemon -p android :app:assembleDebug
+      - name: Verify APK and prepare download
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/SpreadsheetsWars-offline.apk
+          test -s dist/SpreadsheetsWars-offline.apk
+          ls -lh dist/SpreadsheetsWars-offline.apk
+      - name: Upload APK as Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpreadsheetsWars-Android-offline
+          path: dist/SpreadsheetsWars-offline.apk
+          if-no-files-found: error
+      - name: Publish direct-download APK in GitHub Releases
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-offline-v1.9
+          name: Spreadsheets Wars · Android Offline
+          body: |
+            Android APK (offline), built from this repository's current GitHub Pages source.
+            Music included: every MP3 currently available under music/.
+            No internet connection required for gameplay or bundled music.
+            Install the attached SpreadsheetsWars-offline.apk.
+          files: dist/SpreadsheetsWars-offline.apk
+          overwrite_files: true

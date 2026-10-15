@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.maverick.spreadsheetswars'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.maverick.spreadsheetswars'
+        minSdk 26
+        targetSdk 35
+        versionCode 19
+        versionName '1.9.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+
+// Keep one authoritative source for GitHub Pages and Android.
+// The Gradle build automatically packages the CURRENT web app and all MP3s
+// checked into music/, with no CDN or network dependency at runtime.
+def syncOfflineAssets = tasks.register('syncOfflineAssets', Copy) {
+    from(rootProject.projectDir.parentFile) {
+        include 'index.html', 'styles.css', 'app.js', 'core.js',
+                'music.js', 'music-library.js', 'touch-controls.js',
+                'favicon.svg', 'music/*.mp3'
+    }
+    into 'src/main/assets'
+}
+tasks.named('preBuild').configure {
+    dependsOn(syncOfflineAssets)
+}
+tasks.matching { it.name.startsWith('merge') && it.name.endsWith('Assets') }
+    .configureEach { dependsOn(syncOfflineAssets) }
