@@ -1,4 +1,5 @@
 import {SpreadsheetBattle, MAPS, DURATIONS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection} from './core.js';
+import {BattleMusic} from './music.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -11,6 +12,16 @@ const pauseDialog = $('#pauseModal');
 const results = $('#resultsModal');
 const minimap = $('#minimapCanvas');
 const minimapCtx = minimap.getContext('2d');
+const music = new BattleMusic({ onChange: ({status, track, muted, volume}) => {
+  const label = $('#musicTrack');
+  label.textContent = status === 'missing' ? 'Música no disponible' : status === 'blocked' ? 'Pulsa para activar música' : track?.title ?? 'Música de partida';
+  label.title = track?.title ?? label.textContent;
+  $('#musicToggle').textContent = muted ? '🔇' : '♫';
+  $('#musicToggle').setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar música');
+  $('#musicVolume').value = String(Math.round(volume * 100));
+  $('#musicNext').disabled = !music.active || status === 'missing';
+}});
+
 const PLAYER_COLORS = {1:'#3679e5',2:'#ef8838'};
 const CELL_COLORS = {0:'#ffffff',1:'#c8dffc',2:'#f9dec7'};
 const CELL_W = 83, CELL_H = 23, COL_HEADER = 22, ROW_HEADER = 39;
@@ -119,12 +130,14 @@ function startMatch() {
   lastFrame=performance.now();lastUiDraw=0;
   showToast('Nuevo libro',`${map.label} · ${map.size} × ${map.size} · ${formatTime(seconds)}`);
   updateHUD();
+  music.start();
 }
 function safeStartMatch() {
   try {
     startMatch();
   } catch (error) {
     console.error('Error al crear la partida:', error);
+    music.stop();
     session = null;
     $('#setupSummary').textContent = 'No se pudo iniciar la partida. Recarga la página y vuelve a intentarlo.';
     $('#setupSummary').setAttribute('role', 'alert');
@@ -140,16 +153,21 @@ $('#pauseExitBtn').addEventListener('click',returnHome);
 $('#resultsHomeBtn').addEventListener('click',returnHome);
 $('#pauseBtn').addEventListener('click',switchPause);
 $('#resumeBtn').addEventListener('click',switchPause);
+$('#musicToggle').addEventListener('click',()=>{ music.setMuted(!music.audio.muted); if (music.active && music.audio.paused && !session?.game.paused) music.resume(); });
+$('#musicNext').addEventListener('click',()=>{ if (session?.game.running && !session.game.paused) music.next(); });
+$('#musicVolume').addEventListener('input',event=>music.setVolume(Number(event.target.value)/100));
 $$('.excel-tab').forEach(tab=>tab.addEventListener('click',()=>{$$('.excel-tab').forEach(b=>b.classList.toggle('active',b===tab));}));
 $('#zoomRange').addEventListener('input',event=>{zoom=Number(event.target.value)/100;$('#zoomLabel').textContent=event.target.value+'%';});
 
 function returnHome() {
+  music.stop();
   session=null;keys.clear();keyOrder={1:[],2:[]};
   toggle(results,false);toggle(pauseDialog,false);toggle(gameScreen,false);toggle(home,true);
 }
 function switchPause() {
   if(!session || !session.game.running) return;
   session.game.paused=!session.game.paused;
+  if (session.game.paused) music.pause(); else music.resume();
   toggle(pauseDialog,session.game.paused);
   $('#pauseBtn').textContent=session.game.paused?'▶ Continuar':'Ⅱ Pausa';
   keys.clear();keyOrder={1:[],2:[]};
@@ -377,6 +395,7 @@ function handleEvents() {
 }
 function displayResults() {
   if(!session)return;
+  music.stop();
   const g=session.game;
   const opponent=session.match==='ai'?'COM':'J2';
   $('#resultsHeading').textContent=g.winner===0?'¡Empate territorial!':g.winner===1?'¡Jugador 1 gana!':session.match==='ai'?'¡Gana la computadora!':'¡Jugador 2 gana!';
