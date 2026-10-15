@@ -26,7 +26,7 @@ El tamaño y la duración se seleccionan **de manera independiente**. Cualquiera
 | Rápida | 3:00 |
 | Personalizado | 0:30 a 15:00 |
 
-En **J1 vs COM** hay cuatro dificultades. Todas comparten la misma velocidad base: **Principiante** explora de forma más aleatoria; **Normal** busca casillas y power-ups próximos; **Difícil** prioriza objetivos y disputa territorio; **Experto** evalúa concentraciones de casillas y persigue estratégicamente power-ups.
+En **J1 vs COM** hay cuatro dificultades con velocidades distintas, conservando sus estrategias: **Fácil** (10 c/s) explora de forma más aleatoria; **Normal** (15 c/s) busca casillas y power-ups próximos; **Difícil** (20 c/s) prioriza objetivos y disputa territorio; **Experto** (25 c/s) evalúa concentraciones de casillas y persigue estratégicamente power-ups. El jugador J1 mantiene 25 c/s.
 
 ### Controles
 
@@ -36,7 +36,7 @@ En **J1 vs COM** hay cuatro dificultades. Todas comparten la misma velocidad bas
 - **Rueda del ratón:** recorrer la hoja temporalmente; la cámara vuelve a seguir al jugador.
 - **Zoom:** control de la barra de estado (65–130%).
 
-Velocidad: **25 celdas por segundo (1 celda cada 40 ms)** al mantener la dirección. Cada movimiento ocupa exactamente una celda. Entrar en una celda rival la convierte a tu color. Las casillas pueden reconquistarse. La barra de conquista muestra territorio por propietario, no golpes acumulados.
+Velocidad humana: **25 celdas por segundo (1 celda cada 40 ms)** al mantener la dirección. COM: **10 / 15 / 20 / 25 celdas/s**, según la dificultad elegida; PROMEDIO duplica temporalmente la velocidad individual. Cada movimiento ocupa exactamente una celda. Entrar en una celda rival la convierte a tu color. Las casillas pueden reconquistarse. La barra de conquista muestra territorio por propietario, no golpes acumulados.
 
 ### Power-ups simétricos
 
