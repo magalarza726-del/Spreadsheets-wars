@@ -7,8 +7,8 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 test('el formulario registra cambios en todos los radios sin lanzar TypeError', () => {
   // querySelector devuelve un elemento; los listeners de una lista exigen querySelectorAll.
-  assert.match(app, /\$\$\('input\[name="sizeChoice"\], input\[name="durationChoice"\], input\[name="difficultyChoice"\]'\)\.forEach/);
-  assert.doesNotMatch(app, /(?<!\$)\$\('input\[name="sizeChoice"\], input\[name="durationChoice"\], input\[name="difficultyChoice"\]'\)\.forEach/);
+  assert.match(app, /\$\$\('input\[name="sizeChoice"\], input\[name="durationChoice"\], input\[name="difficultyChoice"\], input\[name="terrainChoice"\]'\)\.forEach/);
+  assert.doesNotMatch(app, /(?<!\$)\$\('input\[name="sizeChoice"\], input\[name="durationChoice"\], input\[name="difficultyChoice"\], input\[name="terrainChoice"\]'\)\.forEach/);
 });
 
 test('crear partida y revancha pasan por un manejador seguro', () => {
@@ -18,5 +18,5 @@ test('crear partida y revancha pasan por un manejador seguro', () => {
 });
 
 test('la página solicita el JavaScript corregido sin usar caché de versión anterior', () => {
-  assert.match(html, /<script type="module" src="\.\/app\.js\?v=1\.6\.0"><\/script>/);
+  assert.match(html, /<script type="module" src="\.\/app\.js\?v=1\.7\.0"><\/script>/);
 });
