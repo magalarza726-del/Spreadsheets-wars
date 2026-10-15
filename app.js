@@ -1,5 +1,6 @@
 import {SpreadsheetBattle, MAPS, DURATIONS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection} from './core.js';
-import {BattleMusic} from './music.js';
+import {BattleMusic, TRACKS} from './music.js';
+import {AudioLibrary} from './music-library.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -12,9 +13,10 @@ const pauseDialog = $('#pauseModal');
 const results = $('#resultsModal');
 const minimap = $('#minimapCanvas');
 const minimapCtx = minimap.getContext('2d');
+const audioLibrary = new AudioLibrary();
 const music = new BattleMusic({ onChange: ({status, track, muted, volume}) => {
   const label = $('#musicTrack');
-  label.textContent = status === 'missing' ? 'Música no disponible' : status === 'blocked' ? 'Pulsa para activar música' : track?.title ?? 'Música de partida';
+  label.textContent = status === 'missing' ? 'Añade música en configuración' : status === 'blocked' ? 'Pulsa para activar música' : track?.title ?? 'Música de partida';
   label.title = track?.title ?? label.textContent;
   $('#musicToggle').textContent = muted ? '🔇' : '♫';
   $('#musicToggle').setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar música');
@@ -37,6 +39,7 @@ let lastUiDraw = 0;
 let keys = new Set();
 let keyOrder = {1:[],2:[]};
 let toasts = [];
+let importingMusic = false;
 
 function toggle(element, show) { element.classList.toggle('hidden',!show); }
 const formatTime = (time) => { const whole = Math.max(0,Math.ceil(time)); return `${String(Math.floor(whole/60)).padStart(2,'0')}:${String(whole%60).padStart(2,'0')}`; };
@@ -47,6 +50,7 @@ function setupMatch(kind) {
   toggle($('#difficultySection'),kind==='ai');
   updateChoices();
   toggle(setup,true);
+  void loadMusicLibrary();
 }
 function getMatchSeconds() {
   return selectedDuration === 'custom' ? Math.round(Number($('#customMinutes').value)*60) : DURATIONS[selectedDuration].seconds;
@@ -76,6 +80,65 @@ $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
 $$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
 $('#customMinutes').addEventListener('focus',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
 $('#customMinutes').addEventListener('input',()=>{ $('input[name="durationChoice"][value="custom"]').checked=true;updateChoices(); });
+
+const libraryInput = $('#addMusicFiles');
+const libraryList = $('#localMusicList');
+const musicStatus = $('#localMusicStatus');
+const chooseMusic = $('#musicSource');
+
+function showMusicStatus(message, error = false) {
+  musicStatus.textContent = message;
+  musicStatus.classList.toggle('music-error', error);
+}
+function displayMusicLibrary() {
+  libraryList.replaceChildren();
+  $('#musicCount').textContent = `${audioLibrary.items.length} ${audioLibrary.items.length === 1 ? 'canción' : 'canciones'}`;
+  for (const track of audioLibrary.items) {
+    const row = document.createElement('li'); row.className = 'local-song';
+    const label = document.createElement('span');
+    label.textContent = `♫ ${track.name}`;
+    label.title = track.name;
+    const remove = document.createElement('button');
+    remove.type = 'button'; remove.className = 'remove-song';
+    remove.setAttribute('aria-label', `Quitar ${track.name}`);
+    remove.textContent = '×';
+    remove.addEventListener('click',async () => {
+      remove.disabled = true;
+      try {await audioLibrary.remove(track.id); displayMusicLibrary(); showMusicStatus('Canción eliminada de tu biblioteca.');}
+      catch (error) {remove.disabled = false; showMusicStatus('No fue posible quitar la canción. Inténtalo nuevamente.',true);}
+    });
+    row.append(label,remove);libraryList.append(row);
+  }
+  chooseMusic.disabled = !audioLibrary.items.length;
+  if(!audioLibrary.items.length)chooseMusic.value = 'auto';
+  const details = audioLibrary.persistent
+    ? 'Se guardan en este navegador y no necesitas subirlos a GitHub.'
+    : 'Almacenamiento permanente no disponible: solo se conservarán durante esta sesión.';
+  $('#musicStorageHint').textContent=details;
+}
+async function loadMusicLibrary() {
+  try {await audioLibrary.initialize();displayMusicLibrary();}
+  catch (error) {showMusicStatus('No se pudo leer la biblioteca musical local.',true);}
+}
+libraryInput.addEventListener('change',async () => {
+  if(!libraryInput.files?.length || importingMusic) return;
+  importingMusic = true;
+  $('#startGame').disabled = true;
+  $('#addMusicButton').classList.add('music-loading');
+  showMusicStatus('Agregando las canciones…');
+  try {
+    const report = await audioLibrary.addFiles(libraryInput.files);
+    displayMusicLibrary();
+    if(report.added.length) {chooseMusic.value = 'personal';showMusicStatus(`${report.added.length} ${report.added.length === 1 ? 'canción añadida' : 'canciones añadidas'}.${report.skipped.length ? ` ${report.skipped.length} repetidas.` : ''}${report.errors.length ? ' ' + report.errors.join(' ') : ''}`,!!report.errors.length);}
+    else showMusicStatus([...report.errors, ...(report.skipped.length ? ['Esas canciones ya estaban añadidas.'] : [])].join(' ') || 'No se añadieron canciones.',true);
+  } catch(error) {showMusicStatus('No se pudo agregar la música. Comprueba el espacio disponible.',true);}
+  finally {importingMusic=false;$('#addMusicButton').classList.remove('music-loading');libraryInput.value='';updateChoices();}
+});
+function pickMatchTracks() {
+  // Prefer uploaded tracks, preventing 404 attempts for built-in MP3s not deployed on GitHub Pages.
+  const personal = audioLibrary.getTracks();
+  return chooseMusic.value === 'default' || !personal.length ? TRACKS : personal;
+}
 $('#sidebarHelp').addEventListener('click',()=>toggle(help,true));
 $('#closeHelp').addEventListener('click',()=>toggle(help,false));
 $('#helpOk').addEventListener('click',()=>toggle(help,false));
@@ -130,6 +193,7 @@ function startMatch() {
   lastFrame=performance.now();lastUiDraw=0;
   showToast('Nuevo libro',`${map.label} · ${map.size} × ${map.size} · ${formatTime(seconds)}`);
   updateHUD();
+  music.tracks = pickMatchTracks();
   music.start();
 }
 function safeStartMatch() {
@@ -243,6 +307,7 @@ function attemptMove(playerId,time) {
   // Avoid a burst of stale movements if the tab/main thread stalls.
   if(steps===12)session.lastMoved[playerId]=time;
 }
+
 function computerDirection(game) {
   return chooseComputerDirection(game, session.difficulty, session.aiMemory);
 }
