@@ -1,4 +1,4 @@
-# Spreadsheets Wars — edición 1.7
+# Spreadsheets Wars — edición 1.9
 
 Juego de conquista territorial con la apariencia de una hoja de cálculo. Compatible con GitHub Pages; no necesita un servidor para jugar.
 
@@ -48,3 +48,16 @@ La partida se adapta a teléfonos tanto en horizontal como en vertical: cinta de
 
 ### Música predeterminada
 Los seis MP3 completos siguen **incluidos en el ZIP descargable**, dentro de `music/`. El conector disponible de GitHub no admite cargar directamente estos archivos binarios grandes; mientras no estén subidos a `music/` en GitHub, el sitio publicado permite añadir canciones desde la configuración, pero no puede reproducir las predeterminadas ausentes. Para llevarlas a Pages se deben transferir los archivos originales a ese directorio. No hay que modificar más código.
+
+## Controles táctiles personalizables — V1.9
+
+En **Configurar partida**, elige **Joystick** o **Flechas**. Ya dentro de la partida, pulsa **🎮 Ajustar** junto al botón del minimapa.
+
+- Arrastra el control a cualquier posición dentro de la hoja de su jugador.
+- Modifica su tamaño con el deslizador entre **70 % y 180 %**.
+- En J1 vs J2 cada jugador puede guardar una posición y un tamaño independientes.
+- Pulsa **Restablecer J1/J2** para recuperar los valores iniciales y **✓ Listo** para jugar.
+- El temporizador y el movimiento permanecen congelados durante la edición.
+- Los ajustes se conservan en el almacenamiento local de ese navegador para cada modo de control y jugador. Si el navegador no permite almacenamiento, se aplican durante la sesión actual. Se reajustan automáticamente cuando cambia el tamaño u orientación de pantalla.
+
+El acceso al editor aparece cuando la partida utiliza controles táctiles; el teclado mantiene su funcionamiento.
