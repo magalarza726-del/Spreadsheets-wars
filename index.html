@@ -14,7 +14,7 @@
   <section id="homeScreen" class="home-screen" aria-label="Pantalla principal">
     <header class="home-topbar">
       <div class="home-brand"><span class="brand-icon" aria-hidden="true">SW</span><span>Spreadsheets <strong>Wars</strong></span></div>
-      <div class="home-top-actions"><span class="version-tag">EDICIÓN 2.1</span><span class="profile-bubble">SW</span></div>
+      <div class="home-top-actions"><span class="version-tag">EDICIÓN 2.2</span><span class="profile-bubble">SW</span></div>
     </header>
     <div class="home-workspace">
       <aside class="home-sidebar">
@@ -25,7 +25,7 @@
       <main class="home-content">
         <div class="welcome"><div class="eyebrow"><span class="eyebrow-dot"></span> MULTIJUGADOR LOCAL · SIN CONEXIÓN</div><h1>Se <em>conquista</em> celda por celda.</h1><p>Pinta el tablero, roba casillas al rival y aprovecha los power-ups que aparecen en posiciones reflejadas. Cuando acabe el tiempo, gana quien controle más celdas.</p></div>
         <div class="section-heading"><h2>Nuevo libro de batalla</h2><span>Selecciona un modo para comenzar</span></div>
-        <div class="home-settings-line"><span>Partidas de 1:30 · Mapa aleatorio · Power-ups automáticos</span><button type="button" id="homeSettingsBtn" class="secondary-button">⚙ Configuración</button></div>
+        <div class="home-settings-line"><span>Partidas de 1:30 · Cuatro opciones de mapa · Power-ups automáticos</span><button type="button" id="homeSettingsBtn" class="secondary-button">⚙ Configuración</button></div>
         <div class="mode-cards">
           <button type="button" class="mode-card" data-match="pvp">
             <span class="mode-card-art art-versus"><span class="art-grid"></span><span class="art-left">J1</span><span class="art-vs">VS</span><span class="art-right">J2</span></span>
@@ -43,11 +43,9 @@
         <section class="powerup-home-guide" aria-label="Guía de power-ups"><div class="powerup-guide-heading"><div><span class="eyebrow">CENTRO DE AYUDA · FÓRMULAS</span><h2>Guía de power-ups</h2></div><span class="powerup-guide-caption">Se activan al pisar una casilla verde</span></div><div class="powerup-guide-grid">
 <div><b>✦ INSERTAR</b><span>Explosión 7 × 7 · instantánea</span></div>
 <div><b>Σ SUMA</b><span>3 celdas por paso · 10 s</span></div>
-<div><b>× PRODUCTO</b><span>5 celdas en 5×5 · velocidad ÷2 · 4 s</span></div>
 <div><b>x̄ PROMEDIO</b><span>Velocidad ×2 · 6 s</span></div>
 <div><b>&amp; CONCATENAR</b><span>Rival pinta tu color · 1 s</span></div>
 <div><b>↗ BUSCARV</b><span>Salto hasta el rival · 3 s</span></div>
-<div><b>⇥ SI.CONTAR</b><span>Dash recto 75 c/s · 0,5 s</span></div>
 </div></section><div class="home-bottom-row">
           <div class="tip-card"><div class="tip-icon">✦</div><div><strong>Las fórmulas ahora se encuentran en el mapa</strong><p>Los poderes aparecen por parejas simétricas cada 10 segundos y cada 5 durante la muerte súbita. Atraviésalos para activarlos automáticamente.</p></div></div>
           <div class="keyboard-guide"><strong>Controles rápidos</strong><div><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span>J1</span></div><div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>J2</span></div></div>
@@ -109,6 +107,15 @@
           </div>
         </div>
       </div>
+      <section class="terrain-setup" aria-label="Escenario de partida">
+        <div class="dialog-label">TIPO DE MAPA</div>
+        <div class="terrain-options">
+          <label class="terrain-choice"><input type="radio" name="terrainChoice" value="normal"><b>▦ Normal</b><small>Todas las celdas disponibles</small></label>
+          <label class="terrain-choice"><input type="radio" name="terrainChoice" value="everest"><b>▥ Everest</b><small>Se derrumban celdas durante la partida</small></label>
+          <label class="terrain-choice"><input type="radio" name="terrainChoice" value="crater"><b>╳ Cráter</b><small>Una X bloquea el 10 % del terreno</small></label>
+          <label class="terrain-choice selected"><input type="radio" name="terrainChoice" value="random" checked><b>✦ Random</b><small>Elige uno de los tres escenarios al azar</small></label>
+        </div>
+      </section>
       <div class="difficulty-section hidden" id="difficultySection">
         <div class="dialog-label">DIFICULTAD</div>
         <div class="difficulty-options" id="difficultyOptions">
@@ -118,7 +125,7 @@
           <label class="difficulty-choice"><input type="radio" name="difficultyChoice" value="experto"><strong>Experto</strong><small>Control territorial · 25 c/s</small></label>
         </div>
       </div>
-      <div class="fixed-rules"><b>Nota:</b> Duración <b>1:30</b> · Mapa aleatorio: <b>Normal, Everest o Cráter</b><br><small>Muerte súbita en los últimos 30 s; poderes cada 5 s.</small></div>
+      <div class="fixed-rules"><b>Nota:</b> Duración fija <b>1:30</b> · <b>Random</b> elige entre Normal, Everest y Cráter<br><small>Muerte súbita en los últimos 30 s; poderes cada 5 s.</small></div>
       <div class="setup-summary hidden" id="setupSummary" aria-live="polite">30 × 30 · Aleatorio · 1:30 · J1 vs J2</div>
       <div class="modal-footer"><button type="button" class="secondary-button" id="cancelSetup">Cancelar</button><button type="button" class="primary-button" id="startGame">Crear partida <span>→</span></button></div></div>
   </div>
@@ -148,8 +155,8 @@
   <div class="modal-layer hidden" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="small-dialog"><div class="pause-emblem">Ⅱ</div><h2 id="pauseHeading">Partida en pausa</h2><p>Tu libro de batalla está esperando. Pulsa Escape o continúa cuando quieras.</p><button type="button" class="primary-button full-width" id="resumeBtn">Reanudar partida →</button><button type="button" class="secondary-button full-width" id="pauseExitBtn">Volver al menú</button></div></div>
 
   <div class="modal-layer hidden" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsHeading"><div class="results-dialog"><span class="result-eyebrow">PARTIDA FINALIZADA</span><div class="result-trophy">✦</div><h2 id="resultsHeading">¡Jugador 1 gana!</h2><p id="resultsSubtitle">El territorio pertenece a quien deja su color.</p><div class="results-score"><div><span class="results-dot blue-dot"></span><strong id="resultScore1">0</strong><small>J1 · celdas</small></div><span class="results-divider">VS</span><div><span class="results-dot orange-dot"></span><strong id="resultScore2">0</strong><small id="resultOpponent">J2 · celdas</small></div></div><div class="results-actions"><button class="primary-button" id="playAgainBtn" type="button">Revancha ↺</button><button class="secondary-button" id="resultsHomeBtn" type="button">Menú principal</button></div></div></div>
-  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></p></div><div><h3>J2</h3><p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>INSERTAR</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 10 s.</p><p>× <b>PRODUCTO</b> — cinco celdas en 5×5, mitad de velocidad, 4 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 6 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 1 s.</p><p>↗ <b>BUSCARV</b> — salto temporal cerca del rival, 3 s.</p><p>⇥ <b>SI.CONTAR</b> — dash recto a 75 c/s, 0,5 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
+  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></p></div><div><h3>J2</h3><p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>INSERTAR</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 10 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 6 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 1 s.</p><p>↗ <b>BUSCARV</b> — salto temporal cerca del rival, 3 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
 </div>
-<script type="module" src="./app.js?v=2.1.0"></script>
+<script type="module" src="./app.js?v=2.2.0"></script>
 </body>
 </html>

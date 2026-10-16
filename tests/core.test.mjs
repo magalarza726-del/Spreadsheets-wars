@@ -46,13 +46,9 @@ test('INSERTAR afecta a 7×7 y se recorta en bordes',()=>{
   b2.activate(1,'insertar');assert.equal(b2.counts[1],16);
 });
 
-test('SUMA 3 celdas y PRODUCTO 5 celdas',()=>{
+test('SUMA pinta tres celdas perpendiculares al recorrido',()=>{
   const b=create();b.activate(1,'suma');b.move(1,1,0);
   assert.deepEqual([b.at(2,0),b.at(2,1),b.at(2,2)],[1,1,1]);
-  b.activate(1,'producto');b.move(1,1,0);
-  for(const [dx,dy] of [[0,0],[-2,0],[2,0],[0,-2],[0,2]]) if(b.inBounds(3+dx,1+dy)) assert.equal(b.at(3+dx,1+dy),1);
-  b.advance(4.1);assert.equal(b.hasEffect(1,'producto'),false);
-  assert.equal(b.hasEffect(1,'suma'),true);
 });
 
 test('velocidad base 25 celdas/s para ambos jugadores; PROMEDIO 50 celdas/s durante seis segundos',()=>{
@@ -144,36 +140,32 @@ test('COM utiliza 10, 15, 20 y 25 celdas/s según dificultad; sin alterar J1 ni 
   assert.throws(()=>create({againstComputer:true,difficulty:'imposible'}),/Dificultad desconocida/);
 });
 
-test('PRODUCTO: cinco celdas y mitad de velocidad, PROMEDIO compensa',()=>{
- const b=create();
- b.activate(1,'producto');assert.equal(b.movementInterval(1),80);
- b.activate(1,'promedio');assert.equal(b.movementInterval(1),40);
- b.advance(4.1);assert.equal(b.movementInterval(1),20);
+test('sin PRODUCTO, PROMEDIO duplica la velocidad y termina a los 6 segundos',()=>{
+ const b=create();assert.equal(b.movementInterval(1),40);
+ b.activate(1,'promedio');assert.equal(b.movementInterval(1),20);
+ b.advance(6.1);assert.equal(b.movementInterval(1),40);
 });
 test('repertorio de poderes renombrados, CONCATENAR un segundo y mapa aleatorio',async()=>{
  const {POWERUPS}=await import('../core.js');
  assert.equal(POWERUPS.concatenar.duration,1);
  assert.ok(POWERUPS.insertar && POWERUPS.buscarv);
- assert.equal(Object.keys(POWERUPS).length,7);
+ assert.equal(Object.keys(POWERUPS).length,5);
+  assert.equal(POWERUPS.producto,undefined);
+  assert.equal(POWERUPS.si_contar,undefined);
+  assert.throws(()=>create().activate(1,'producto'),/Power-up desconocido/);
+  assert.throws(()=>create().activate(1,'si_contar'),/Power-up desconocido/);
  assert.equal(selectRandomTerrain(()=>0),'normal');
  assert.equal(selectRandomTerrain(()=>.45),'everest');
  assert.equal(selectRandomTerrain(()=>.99),'crater');
 });
 
-test('PRODUCTO pinta exactamente cinco celdas en patrón 5×5',()=>{
- const b=create();b.players[0].x=12;b.players[0].y=12;
- const before=b.counts[1];b.activate(1,'producto');b.paintMovement(1);
- assert.equal(b.counts[1]-before,5);
- for(const [dx,dy] of [[0,0],[-2,0],[2,0],[0,-2],[0,2]])assert.equal(b.at(12+dx,12+dy),1);
- assert.equal(b.at(12+1,12),0);
+test('aparecen solo los cinco power-ups permitidos',()=>{
+ const b=create({random:()=>0.99999}); const [a,c]=b.spawnMirroredPair();
+ assert.ok(POWERUPS[a.type]);assert.equal(a.type,c.type);
+ assert.ok(!('producto' in POWERUPS)&&!('si_contar' in POWERUPS));
 });
-test('SI.CONTAR: dash fijo a 75 c/s durante medio segundo, sin girar',()=>{
- const b=create();b.activate(1,'producto');b.activate(1,'si_contar');
- assert.equal(b.movementInterval(1),1000/75);
- const prev={x:b.players[0].x,y:b.players[0].y};
- b.move(1,0,1);
- assert.equal(b.players[0].x,prev.x+1);
- assert.equal(b.players[0].y,prev.y);
- b.advance(.51);
- assert.equal(b.movementInterval(1),80);
+test('sin dash: se permite girar y se mantiene velocidad base',()=>{
+ const b=create();assert.equal(b.movementInterval(1),40);
+ assert.equal(b.move(1,0,1),true);
+ assert.equal(b.players[0].x,1);assert.equal(b.players[0].y,2);
 });

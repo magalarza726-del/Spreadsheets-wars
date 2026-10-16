@@ -3,18 +3,22 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-test('la configuración de partida no ofrece mapa, tiempo ni joystick',()=>{
+test('la configuración permite los cuatro mapas pero no cambiar tiempo ni joystick',()=>{
  assert.match(html,/id="settingsModal"/);
  assert.match(html,/id="touchPreview1"/);
  assert.match(html,/id="settingsMusicVolume"/);
- assert.doesNotMatch(html,/name="durationChoice"|name="terrainChoice"|name="touchChoice"/);
+ assert.doesNotMatch(html,/name="durationChoice"|name="touchChoice"/);
+ assert.match(html,/name="terrainChoice" value="normal"/);
+ assert.match(html,/name="terrainChoice" value="everest"/);
+ assert.match(html,/name="terrainChoice" value="crater"/);
+ assert.match(html,/name="terrainChoice" value="random" checked/);
  assert.match(app,/input\[name="sizeChoice"\], input\[name="difficultyChoice"\]/);
 });
 test('inicio con cuenta atrás, aleatoriedad de mapa y versión web actual',()=>{
  assert.match(app,/function safeStartMatch\(\)/);
  assert.match(app,/countdownRemainingMs=3000/);
- assert.match(app,/terrain=selectRandomTerrain\(\)/);
- assert.match(html,/app\.js\?v=2\.1\.0/);
+ assert.match(app,/terrain=selectedTerrain==='random'\?selectRandomTerrain\(\):selectedTerrain/);
+ assert.match(html,/app\.js\?v=2\.2\.0/);
 });
 test('la música se difumina al terminar y no se interrumpe de golpe',()=>{
  assert.match(app,/music\.fadeOut\(2700\)/);
@@ -27,6 +31,6 @@ test('menú simplificado y nombre del mapa durante la cuenta atrás',()=>{
  assert.ok(html.indexOf('id="difficultySection"') < html.indexOf('class="fixed-rules"'));
  assert.match(html,/id="countdownMapName"/);
  assert.match(app,/countdownMapName/);
- assert.match(html,/SI\.CONTAR/);
- assert.match(app,/game\.hasEffect\(playerId,'si_contar'\)/);
+ assert.doesNotMatch(html,/PRODUCTO|SI\.CONTAR/);
+ assert.doesNotMatch(app,/si_contar|producto/);
 });

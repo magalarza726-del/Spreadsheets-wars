@@ -33,7 +33,7 @@ test('No se atraviesan ni pintan las celdas caídas con bomba o fórmulas',()=>{
   assert.equal(b.collapse(15,14),true);
   assert.equal(b.move(1,1,0),false);
   assert.equal(b.paint(15,14,1),false);
-  b.activate(1,'insertar');b.activate(1,'suma');b.activate(1,'producto');
+  b.activate(1,'insertar');b.activate(1,'suma');
   b.paintMovement(1);
   assert.equal(b.at(15,14),0);
   assert.equal(b.playableCells,899);

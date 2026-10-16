@@ -31,6 +31,7 @@ const CELL_W = 83, CELL_H = 23, COL_HEADER = 22, ROW_HEADER = 39;
 
 let selectedMatch = 'pvp';
 let selectedMap = 'pequeno';
+let selectedTerrain = 'random';
 const MATCH_SECONDS = 90;
 
 const mobileInput = window.matchMedia('(pointer: coarse)');
@@ -76,24 +77,25 @@ function setupMatch(kind) {
 }
 function getMatchSeconds() {return MATCH_SECONDS;}
 function updateChoices() {
-  for (const [name,selector] of [['sizeChoice','.size-choice'],['difficultyChoice','.difficulty-choice']]) {
+  for (const [name,selector] of [['sizeChoice','.size-choice'],['terrainChoice','.terrain-choice'],['difficultyChoice','.difficulty-choice']]) {
     $$(selector).forEach(label=>{
       const input=$('input[type="radio"]',label);
       label.classList.toggle('selected',input.checked);
       if(input.checked){
         if(name==='sizeChoice')selectedMap=input.value;
+        if(name==='terrainChoice')selectedTerrain=input.value;
         if(name==='difficultyChoice')selectedDifficulty=input.value;
       }
     });
   }
   const map=MAPS[selectedMap];
   $('#startGame').disabled = false;
-  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 c/s'}`;
+  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${selectedTerrain==='random'?'Random':TERRAINS[selectedTerrain].label} · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 c/s'}`;
 }
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
 $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
-$$('input[name="sizeChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
+$$('input[name="sizeChoice"], input[name="terrainChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
 
 const libraryInput = $('#addMusicFiles');
 const libraryList = $('#localMusicList');
@@ -250,7 +252,7 @@ function buildView(playerId) {
 
 function getCellDims() {return [Math.round(CELL_W*zoom),Math.round(CELL_H*zoom)];}
 function startMatch() {
-  const map=MAPS[selectedMap], seconds=getMatchSeconds(), terrain=selectRandomTerrain();
+  const map=MAPS[selectedMap], seconds=getMatchSeconds(), terrain=selectedTerrain==='random'?selectRandomTerrain():selectedTerrain;
   if(!Number.isFinite(seconds)||seconds<=0)return;
   toggleLayoutEditor(false);
   for(const control of Object.values(touchControllers))control?.destroy?.();
@@ -437,7 +439,7 @@ function attemptMove(playerId,time) {
   if(!session?.game.running || session.game.paused || layoutEditing || countdownRemainingMs>0) return;
   const game=session.game;
   const isAI=playerId===2 && session.match==='ai';
-  if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId] && !game.hasEffect(playerId,'si_contar')) {
+  if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId]) {
     session.lastMoved[playerId]=-Infinity;
     return;
   }
@@ -446,7 +448,7 @@ function attemptMove(playerId,time) {
   // Handle sub-frame steps (especially PROMEDIO: 20 ms) without skipping any cell.
   let steps=0;
   while(time-session.lastMoved[playerId]>=interval-0.5 && steps<12){
-    const direction=isAI?computerDirection(game):(touchVectors[playerId]||DIRECTIONS[keyOrder[playerId].at(-1)]|| (game.hasEffect(playerId,'si_contar')?[game.players[playerId-1].dx,game.players[playerId-1].dy]:null));
+    const direction=isAI?computerDirection(game):(touchVectors[playerId]||DIRECTIONS[keyOrder[playerId].at(-1)]);
     if(!direction)break;
     const didMove=game.move(playerId,...direction);
     session.lastMoved[playerId]+=interval;
@@ -604,7 +606,7 @@ function updateHUD() {
     if(!current.length){const em=document.createElement('span');em.className='no-powerups';em.textContent='✦ Sin habilidades activas';view.abilities.appendChild(em);}
     for(const type of current){
       const pill=document.createElement('span');pill.className='active-powerup';
-      const short=type==='concatenar'?'CONCAT.':type==='promedio'?'PROM.':type==='producto'?'PRODUCTO':type==='buscarv'?'BUSCARV':type==='si_contar'?'SI.CONTAR':'SUMA';
+      const short=type==='concatenar'?'CONCAT.':type==='promedio'?'PROM.':type==='buscarv'?'BUSCARV':'SUMA';
       pill.innerHTML=`${POWERUPS[type].icon} ${short} <strong>${game.effectRemaining(view.playerId,type).toFixed(1)}s</strong>`;
       view.abilities.append(pill);
     }
@@ -654,7 +656,7 @@ function loop(time) {
     game.advance(delta);
     if(game.running){
       attemptMove(1,time);
-      if(session.match==='ai'||keyOrder[2].length||touchVectors[2]||game.hasEffect(2,'si_contar'))attemptMove(2,time);
+      if(session.match==='ai'||keyOrder[2].length||touchVectors[2])attemptMove(2,time);
     }
     handleEvents();
     }

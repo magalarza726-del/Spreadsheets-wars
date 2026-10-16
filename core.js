@@ -24,11 +24,9 @@ export const DIFFICULTIES = Object.freeze({
 export const POWERUPS = Object.freeze({
   insertar: { name: 'INSERTAR', duration: 0, icon: '✦', description: 'Explosión de pintura de 7 × 7 celdas.' },
   suma: { name: 'SUMA', duration: 10, icon: 'Σ', description: 'Pinta 3 celdas por movimiento.' },
-  producto: { name: 'PRODUCTO', duration: 4, icon: '×', description: 'Pinta cinco celdas en un patrón 5 × 5, a la mitad de velocidad.' },
   promedio: { name: 'PROMEDIO', duration: 6, icon: 'x̄', description: 'Duplica tu velocidad de movimiento.' },
   concatenar: { name: 'CONCATENAR', duration: 1, icon: '&', description: 'El rival pinta con tu color.' },
-  buscarv: { name: 'BUSCARV', duration: 3, icon: '↗', description: 'Te transporta cerca del rival y te devuelve después.' },
-  si_contar: { name: 'SI.CONTAR', duration: 0.5, icon: '⇥', description: 'Dash recto a 75 c/s durante 0,5 segundos.' }
+  buscarv: { name: 'BUSCARV', duration: 3, icon: '↗', description: 'Te transporta cerca del rival y te devuelve después.' }
 });
 
 export const DIRECTIONS = Object.freeze({
@@ -164,8 +162,7 @@ export class SpreadsheetBattle {
     const cellsPerSecond = this.againstComputer && playerId === 2
       ? DIFFICULTIES[this.difficulty].cellsPerSecond
       : 25;
-    if (this.hasEffect(playerId, 'si_contar')) return 1000 / 75;
-    const multiplier = (this.hasEffect(playerId, 'promedio') ? 2 : 1) * (this.hasEffect(playerId, 'producto') ? 0.5 : 1);
+    const multiplier = this.hasEffect(playerId, 'promedio') ? 2 : 1;
     return 1000 / (cellsPerSecond * multiplier);
   }
 
@@ -176,10 +173,7 @@ export class SpreadsheetBattle {
   paintMovement(playerId) {
     const player = this.players[playerId - 1];
     const color = this.paintingOwner(playerId);
-    if (this.hasEffect(playerId, 'producto')) {
-      // Cinco celdas, repartidas en una cruz dentro de 5 × 5.
-      for (const [dx,dy] of [[0,0],[-2,0],[2,0],[0,-2],[0,2]]) this.paint(player.x+dx, player.y+dy, color);
-    } else if (this.hasEffect(playerId, 'suma')) {
+    if (this.hasEffect(playerId, 'suma')) {
       this.paint(player.x, player.y, color);
       // SUMA: three consecutive cells perpendicular to travel.
       if (player.dx !== 0) {
@@ -197,7 +191,6 @@ export class SpreadsheetBattle {
   move(playerId, dx, dy) {
     if (!this.running || this.paused || ![1,2].includes(playerId) || Math.abs(dx) + Math.abs(dy) !== 1) return false;
     const player = this.players[playerId - 1];
-    if (this.hasEffect(playerId, 'si_contar') && (player.dx || player.dy)) { dx = player.dx; dy = player.dy; }
     player.dx = dx; player.dy = dy;
     const x = player.x + dx, y = player.y + dy;
     if (!this.canEnter(x, y)) return false;
