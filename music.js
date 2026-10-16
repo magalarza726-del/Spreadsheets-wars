@@ -28,6 +28,10 @@ export class BattleMusic {
     this.audio = audio ?? new Audio();
     this.audio.preload = 'auto';
     this.audio.volume = 0.38;
+    this.preferredVolume = 0.38;
+    this.fadeRequest = null;
+    this.fadeGeneration = 0;
+    this.fading = false;
     this.onChange = onChange;
     this.active = false;
     this.current = null;
@@ -35,7 +39,7 @@ export class BattleMusic {
     this.queue = [];
     this.failed = new Set();
     this.serial = 0;
-    this.audio.addEventListener('ended', () => { if (this.active) this.next(); });
+    this.audio.addEventListener('ended', () => { if (this.active && !this.fading) this.next(); });
     this.audio.addEventListener('error', () => { if (this.active) this.failCurrent(this.serial); });
   }
 
@@ -45,12 +49,13 @@ export class BattleMusic {
 
   start() {
     this.stop();
+    this.audio.volume=this.preferredVolume;
     this.active = true;
     this.next();
   }
 
   next() {
-    if (!this.active) return;
+    if (!this.active || this.fading) return;
     if (!this.queue.length) {
       const available = this.tracks.filter(track => !this.failed.has(track.id));
       if (!available.length) {
@@ -108,6 +113,10 @@ export class BattleMusic {
   }
 
   stop() {
+    this.fadeGeneration++;
+    if(this.fadeRequest!==null && typeof cancelAnimationFrame==='function')cancelAnimationFrame(this.fadeRequest);
+    this.fadeRequest=null;this.fading=false;
+    this.audio.volume=this.preferredVolume;
     this.active = false;
     this.serial++;
     this.audio.pause();
@@ -126,7 +135,25 @@ export class BattleMusic {
   }
 
   setVolume(value) {
-    this.audio.volume = Math.min(1, Math.max(0, Number(value) || 0));
+    this.preferredVolume = Math.min(1, Math.max(0, Number(value) || 0));
+    if(!this.fading)this.audio.volume=this.preferredVolume;
     this.publish(this.active ? 'playing' : 'stopped');
+  }
+
+  /** Fade soundtrack while the winner dialog is shown; cancel on replay/exit. */
+  fadeOut(durationMs=2700) {
+    if(!this.active || this.fading)return;
+    this.fading=true;
+    const generation=++this.fadeGeneration;
+    const beginning=this.audio.volume;
+    const started=performance.now();
+    const tick=now=>{
+      if(!this.fading || generation!==this.fadeGeneration)return;
+      const fraction=Math.min(1,Math.max(0,(now-started)/durationMs));
+      this.audio.volume=Math.max(0,beginning*(1-fraction));
+      if(fraction>=1)this.stop();
+      else this.fadeRequest=requestAnimationFrame(tick);
+    };
+    this.fadeRequest=requestAnimationFrame(tick);
   }
 }

@@ -4,8 +4,8 @@ import {SpreadsheetBattle, TERRAINS, DURATIONS, mirrorCell, chooseComputerDirect
 
 const make=(opts={})=>new SpreadsheetBattle({size:30,seconds:90,random:()=>0.45,...opts});
 
-test('solo Bala 90s, Rápida 180s y tres escenarios',()=>{
-  assert.deepEqual(Object.values(DURATIONS).map(v=>v.seconds),[90,180]);
+test('Bala de 90s y tres escenarios',()=>{
+  assert.deepEqual(Object.values(DURATIONS).map(v=>v.seconds),[90]);
   assert.deepEqual(Object.keys(TERRAINS),['normal','everest','crater']);
 });
 
@@ -33,7 +33,7 @@ test('No se atraviesan ni pintan las celdas caídas con bomba o fórmulas',()=>{
   assert.equal(b.collapse(15,14),true);
   assert.equal(b.move(1,1,0),false);
   assert.equal(b.paint(15,14,1),false);
-  b.activate(1,'bomba');b.activate(1,'suma');b.activate(1,'producto');
+  b.activate(1,'insertar');b.activate(1,'suma');b.activate(1,'producto');
   b.paintMovement(1);
   assert.equal(b.at(15,14),0);
   assert.equal(b.playableCells,899);
@@ -57,13 +57,8 @@ test('Bala entra en muerte súbita a los 60s y duplica la frecuencia',()=>{
   b.advance(25);assert.equal(b.running,false);
 });
 
-test('Rápida genera tres parejas cada 30 segundos',()=>{
-  const b=make({mode:'rapida',seconds:180});
-  b.advance(29.9);assert.equal(b.pickups.length,0);
-  b.advance(.1);assert.equal(b.pickups.length,6);
-  b.advance(30);assert.equal(b.pickups.length,12);
-  for(let i=0;i<6;i+=2){
-    const [a,c]=b.pickups.slice(i,i+2);
-    assert.deepEqual({x:c.x,y:c.y},mirrorCell(a.x,a.y,30));
-  }
+
+test('Rápida y duración diferente de 1:30 están deshabilitados',()=>{
+ assert.throws(()=>make({mode:'rapida',seconds:180}),/90 segundos/);
+ assert.throws(()=>make({seconds:120}),/90 segundos/);
 });

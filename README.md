@@ -1,63 +1,50 @@
-# Spreadsheets Wars — edición 1.9
+# Spreadsheets Wars · V2.0
 
-Juego de conquista territorial con la apariencia de una hoja de cálculo. Compatible con GitHub Pages; no necesita un servidor para jugar.
+Juego de conquista territorial inspirado visualmente en una hoja de cálculo. Funciona en GitHub Pages y dentro del APK Android **offline** desde el mismo código base.
 
-## Partidas y velocidades
+## Reglas actuales
 
-- J1 vs J2: pantalla dividida, flechas para J1 y WASD para J2. Ambos: 25 celdas/s.
-- J1 vs COM: vista individual con cuatro estrategias y velocidades: Fácil 10 c/s, Normal 15 c/s, Difícil 20 c/s y Experto 25 c/s. La IA mantiene sus comportamientos anteriores.
-- Tamaños: 30×30, 50×50 y 70×70, independientes del escenario y del modo de tiempo.
-- **Bala: 1:30.** Hay una pareja de power-ups simétricos cada 10 segundos. Al llegar a los últimos 30 segundos se activa **Muerte súbita** y aparecen cada 5 segundos.
-- **Rápida: 3:00.** Cada 30 segundos aparecen **tres parejas de power-ups simétricos** a la vez (seis casillas verdes, tres oportunidades de cada lado).
+- **Partidas de 1:30 exclusivamente**, en tres tamaños independientes: 30×30, 50×50 y 70×70.
+- **El escenario se sortea en cada partida** entre Normal, Everest y Cráter (no es seleccionable). Everest derrumba dos celdas simétricas cada cuatro segundos; Cráter bloquea una X de aproximadamente el 10 % del tablero. Las celdas caídas no pueden atravesarse ni pintarse.
+- **Bala**: una pareja de power-ups simétricos cada 10 segundos. En los últimos 30 segundos comienza **Muerte súbita** y aparecen cada 5 segundos.
+- **Cuenta atrás de 3, 2, 1** antes del primer movimiento, sin consumir tiempo de partida. La música comienza durante esa cuenta atrás.
+- Al terminar, aparece la pantalla de victoria y **la música se difumina durante 2,7 segundos** en lugar de detenerse bruscamente.
 
-## Escenarios
+## Power-ups (se activan automáticamente)
 
-- **Normal**: todas las celdas transitables.
-- **Everest**: cada 4 segundos caen dos celdas simétricas seleccionadas al azar. Quedan permanentemente intransitables.
-- **Cráter**: una X centrada bloquea exactamente el 10% de las celdas iniciales de cada tablero, con espacio de paso alrededor de sus extremos.
+| Poder | Efecto | Duración |
+| --- | --- | --- |
+| INSERTAR | Explosión de pintura de 7 × 7 celdas | Instantáneo |
+| SUMA | Pinta tres celdas por paso, en línea transversal | 10 s |
+| PRODUCTO | Pinta cinco celdas por paso en cruz y reduce la velocidad a la mitad | 4 s |
+| PROMEDIO | Duplica la velocidad de movimiento | 6 s |
+| CONCATENAR | El rival pinta de tu color | 1 s |
+| BUSCARV | Se transporta cerca del rival y regresa al terminar | 3 s |
 
-No se puede atravesar ni pintar una celda caída, **ni siquiera con las bombas, SUMA o PRODUCTO**. No aparecen poderes sobre dichas celdas y se excluyen de los porcentajes de conquista. La COM las evita al moverse.
+PRODUCTO y PROMEDIO pueden coincidir: **sus efectos de velocidad se compensan** mientras ambos duren. PRODUCTO prevalece sobre SUMA para definir la forma de pintado.
 
-## Guía de power-ups en pantalla principal
+## Interfaz
 
-- **Bomba**: pinta 7×7 instantáneamente, salvo celdas caídas.
-- **SUMA**: 3 celdas por paso durante 10 segundos.
-- **PRODUCTO**: 3×3 por paso durante 4 segundos.
-- **PROMEDIO**: velocidad doble durante 6 segundos.
-- **CONCATENAR**: el rival pinta de tu color durante 2 segundos.
-- **ÍNDICE**: teletransporte temporal cerca del rival durante 3 segundos.
+La pantalla principal tiene botones **J1 vs J2**, **J1 vs COM**, **Guía de poderes** y **Configuración**. La configuración de partida solamente pide **tamaño del tablero** y, si aplica, **dificultad de COM**. Dificultades COM: Fácil 10, Normal 15, Difícil 20 y Experto 25 celdas/segundo. J1/J2: 25 celdas/segundo.
 
-## Móvil
+**Configuración** abre una ventana independiente donde se pueden importar canciones propias, seleccionar música y controlar el volumen. En la **aplicación Android**, también contiene una vista previa para arrastrar el joystick de cada jugador, ajustar tamaño entre el 70 % y el 180 % y restablecer su ubicación. Estas posiciones se guardan localmente.
 
-En la ventana de configuración elige **No**, **Joystick** o **Flechas**. Los controles táctiles aparecen superpuestos en la hoja de cada jugador; en J1 vs J2 hay dos controladores independientes. El teclado sigue disponible. Se usa Pointer Events y los movimientos conservan la velocidad establecida por dificultad/poder.
+**GitHub Pages/PC** emplea teclado (flechas J1 y WASD J2) sin opción de panel táctil. El **APK Android** siempre utiliza joystick táctil, con un control por jugador en partidas locales.
 
 ## Música
 
-El juego reproduce canciones aleatorias y cambia al terminar una pista; también permite añadir MP3 y otros archivos de audio desde la pantalla de configuración, con biblioteca local y controles de volumen.
+Las canciones oficiales se reproducen aleatoriamente, pasando a otra al terminar sin repetir inmediatamente. El APK integra automáticamente las canciones MP3 que estén presentes en `music/` al momento de compilar. Los archivos musicales personales se conservan localmente cuando el dispositivo admite almacenamiento persistente. El juego funciona aunque alguna pista predeterminada esté ausente.
 
-El **ZIP completo entregado contiene los seis MP3 originales, sin recortes**, en la carpeta `music/`: dos versiones distintas de Garra de Acero, Laboratorio X, Marcha de Cero, Ceniza y Rayo y Pulso de Acero.
+## GitHub Pages
 
-**Para reproducir esas canciones de forma predeterminada en GitHub Pages, los seis archivos MP3 deben estar subidos individualmente al directorio `music/` del repositorio.** El ZIP por sí mismo no cuenta como archivos publicados. La conexión utilizada para actualizar el código no permite transferir directamente estos binarios grandes. Si faltan, el juego funciona de todos modos y se pueden importar las canciones desde el navegador.
+El sitio funciona directamente en el directorio raíz con `index.html`, `styles.css`, `app.js`, `core.js`, `music.js`, `music-library.js`, `touch-controls.js`, `favicon.svg` y `music/`. No necesita servicios externos. GitHub Pages: `https://magalarza726-del.github.io/Spreadsheets-wars/`.
 
-## Desarrollo
+## Android APK offline
 
-HTML, CSS, JavaScript ES Modules y Canvas 2D; GitHub Pages. Ejecuta `npm test` en Node.js para validar el motor, las reglas, la IA, la biblioteca de música y las regresiones de interfaz.
+La carpeta `android/` contiene el proyecto Java/Gradle que integra los archivos web mediante **WebViewAssetLoader** y no solicita el permiso INTERNET. Usa WebView local con el agente `SpreadsheetsWarsAndroid` para activar los joysticks solo en el APK.
 
-## Mejoras móviles V1.8
-La partida se adapta a teléfonos tanto en horizontal como en vertical: cinta de Excel y HUD compactos, minimapa ocultable desde **▦ Mapa**, controles táctiles más pequeños, zoom inicial del 75 % y respeto de las áreas seguras. En J1 vs J2 vertical las hojas se apilan para facilitar el uso. El joystick se selecciona automáticamente en móviles salvo que el jugador haya guardado otra preferencia (No / Joystick / Flechas).
+Cada subida a `main` genera automáticamente el APK con la acción **Build offline Android APK**. Descárgalo desde **Releases** o desde el artefacto del workflow. En Android Studio abre la carpeta `android/` y compila `:app:assembleDebug` (JDK 17 / Android SDK 35).
 
-### Música predeterminada
-Los seis MP3 completos siguen **incluidos en el ZIP descargable**, dentro de `music/`. El conector disponible de GitHub no admite cargar directamente estos archivos binarios grandes; mientras no estén subidos a `music/` en GitHub, el sitio publicado permite añadir canciones desde la configuración, pero no puede reproducir las predeterminadas ausentes. Para llevarlas a Pages se deben transferir los archivos originales a ese directorio. No hay que modificar más código.
+## Comprobaciones
 
-## Controles táctiles personalizables — V1.9
-
-En **Configurar partida**, elige **Joystick** o **Flechas**. Ya dentro de la partida, pulsa **🎮 Ajustar** junto al botón del minimapa.
-
-- Arrastra el control a cualquier posición dentro de la hoja de su jugador.
-- Modifica su tamaño con el deslizador entre **70 % y 180 %**.
-- En J1 vs J2 cada jugador puede guardar una posición y un tamaño independientes.
-- Pulsa **Restablecer J1/J2** para recuperar los valores iniciales y **✓ Listo** para jugar.
-- El temporizador y el movimiento permanecen congelados durante la edición.
-- Los ajustes se conservan en el almacenamiento local de ese navegador para cada modo de control y jugador. Si el navegador no permite almacenamiento, se aplican durante la sesión actual. Se reajustan automáticamente cuando cambia el tamaño u orientación de pantalla.
-
-El acceso al editor aparece cuando la partida utiliza controles táctiles; el teclado mantiene su funcionamiento.
+Desde la raíz ejecuta `npm test` para verificar las reglas, el terreno, la música, la configuración y las regresiones de interfaz. Las fuentes web y las del APK se comparten para que las reglas no diverjan.

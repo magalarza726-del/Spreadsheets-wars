@@ -56,6 +56,8 @@ public final class MainActivity extends Activity {
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        // Identify the offline APK so the web game always enables Android joysticks.
+        settings.setUserAgentString(settings.getUserAgentString() + " SpreadsheetsWarsAndroid");
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);

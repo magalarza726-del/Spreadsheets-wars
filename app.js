@@ -1,4 +1,4 @@
-import {SpreadsheetBattle, MAPS, DURATIONS, TERRAINS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection} from './core.js';
+import {SpreadsheetBattle, MAPS, DURATIONS, TERRAINS, DIFFICULTIES, POWERUPS, DIRECTIONS, columnLabel, clamp, chooseComputerDirection, selectRandomTerrain} from './core.js';
 import {BattleMusic, TRACKS} from './music.js';
 import {AudioLibrary} from './music-library.js';
 import {attachTouchControls} from './touch-controls.js';
@@ -31,14 +31,16 @@ const CELL_W = 83, CELL_H = 23, COL_HEADER = 22, ROW_HEADER = 39;
 
 let selectedMatch = 'pvp';
 let selectedMap = 'pequeno';
-let selectedDuration = 'bala';
-let selectedTerrain = 'normal';
+const MATCH_SECONDS = 90;
+
 const mobileInput = window.matchMedia('(pointer: coarse)');
-let selectedTouch = 'none';
-try {
-  const saved = localStorage.getItem('sw-touch-choice');
-  selectedTouch = ['none','joystick','arrows'].includes(saved) ? saved : mobileInput.matches ? 'joystick' : 'none';
-} catch { selectedTouch = mobileInput.matches ? 'joystick' : 'none'; }
+// Only the packaged Android APK uses touch controls; browser/PC uses keyboard.
+const isAndroidApp = /SpreadsheetsWarsAndroid/.test(navigator.userAgent);
+const selectedTouch = isAndroidApp ? 'joystick' : 'none';
+let countdownRemainingMs = 0;
+let pendingStartMusic = false;
+let settingsPreviews = {};
+
 const isCompactGame = () => mobileInput.matches || window.innerWidth <= 760;
 const mapToggle = $('#minimapToggle');
 const mapWidget = $('#minimapWidget');
@@ -65,49 +67,33 @@ let importingMusic = false;
 function toggle(element, show) { element.classList.toggle('hidden',!show); }
 const formatTime = (time) => { const whole = Math.max(0,Math.ceil(time)); return `${String(Math.floor(whole/60)).padStart(2,'0')}:${String(whole%60).padStart(2,'0')}`; };
 
-function syncTouchSetting() {
-  const selected = $('input[name="touchChoice"][value="' + selectedTouch + '"]');
-  if(selected) selected.checked = true;
-}
-syncTouchSetting();
 function setupMatch(kind) {
   selectedMatch = kind;
   $('#selectedMatchText').textContent = kind === 'ai' ? 'J1 vs COM · Un jugador contra la computadora' : 'J1 vs J2 · Dos jugadores locales';
   toggle($('#difficultySection'),kind==='ai');
   updateChoices();
   toggle(setup,true);
-  void loadMusicLibrary();
 }
-function getMatchSeconds() {
-  return DURATIONS[selectedDuration].seconds;
-}
+function getMatchSeconds() {return MATCH_SECONDS;}
 function updateChoices() {
-  for(const [name,selector] of [['sizeChoice','.size-choice'],['durationChoice','.time-choice'],['difficultyChoice','.difficulty-choice'],['terrainChoice','.terrain-choice']]) {
-    $$(`${selector}`).forEach(label=>{
+  for (const [name,selector] of [['sizeChoice','.size-choice'],['difficultyChoice','.difficulty-choice']]) {
+    $$(selector).forEach(label=>{
       const input=$('input[type="radio"]',label);
       label.classList.toggle('selected',input.checked);
       if(input.checked){
         if(name==='sizeChoice')selectedMap=input.value;
-        if(name==='durationChoice')selectedDuration=input.value;
         if(name==='difficultyChoice')selectedDifficulty=input.value;
-        if(name==='terrainChoice')selectedTerrain=input.value;
       }
     });
   }
   const map=MAPS[selectedMap];
-  const seconds=getMatchSeconds();
-  const valid=Number.isFinite(seconds)&&seconds>0;
-  $('#startGame').disabled=!valid;
-  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${TERRAINS[selectedTerrain].label} · ${valid?formatTime(seconds):'Tiempo no válido'} · ${selectedMatch==='ai'?`J1 25 c/s · COM ${DIFFICULTIES[selectedDifficulty].label} ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 celdas/s'}`;
+  $('#startGame').disabled = false;
+  $('#setupSummary').textContent=`${map.size} × ${map.size} · Mapa aleatorio · 1:30 · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label} (${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s)`:'J1 vs J2 · 25 c/s'}`;
 }
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
 $('#cancelSetup').addEventListener('click',()=>toggle(setup,false));
-$$('input[name="sizeChoice"], input[name="durationChoice"], input[name="difficultyChoice"], input[name="terrainChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
-$$('input[name="touchChoice"]').forEach(input=>input.addEventListener('change',()=>{
-  selectedTouch=$('input[name="touchChoice"]:checked').value;
-  try {localStorage.setItem('sw-touch-choice',selectedTouch);} catch {}
-}));
+$$('input[name="sizeChoice"], input[name="difficultyChoice"]').forEach(input=>input.addEventListener('change',updateChoices));
 
 const libraryInput = $('#addMusicFiles');
 const libraryList = $('#localMusicList');
@@ -137,8 +123,7 @@ function displayMusicLibrary() {
     });
     row.append(label,remove);libraryList.append(row);
   }
-  chooseMusic.disabled = !audioLibrary.items.length;
-  if(!audioLibrary.items.length)chooseMusic.value = 'auto';
+  chooseMusic.disabled = false;
   const details = audioLibrary.persistent
     ? 'Se guardan en este navegador y no necesitas subirlos a GitHub.'
     : 'Almacenamiento permanente no disponible: solo se conservarán durante esta sesión.';
@@ -151,22 +136,84 @@ async function loadMusicLibrary() {
 libraryInput.addEventListener('change',async () => {
   if(!libraryInput.files?.length || importingMusic) return;
   importingMusic = true;
-  $('#startGame').disabled = true;
+  libraryInput.disabled = true;
   $('#addMusicButton').classList.add('music-loading');
   showMusicStatus('Agregando las canciones…');
   try {
     const report = await audioLibrary.addFiles(libraryInput.files);
     displayMusicLibrary();
-    if(report.added.length) {chooseMusic.value = 'personal';showMusicStatus(`${report.added.length} ${report.added.length === 1 ? 'canción añadida' : 'canciones añadidas'}.${report.skipped.length ? ` ${report.skipped.length} repetidas.` : ''}${report.errors.length ? ' ' + report.errors.join(' ') : ''}`,!!report.errors.length);}
+    if(report.added.length) {chooseMusic.value = 'personal';persistMusicSource();showMusicStatus(`${report.added.length} ${report.added.length === 1 ? 'canción añadida' : 'canciones añadidas'}.${report.skipped.length ? ` ${report.skipped.length} repetidas.` : ''}${report.errors.length ? ' ' + report.errors.join(' ') : ''}`,!!report.errors.length);}
     else showMusicStatus([...report.errors, ...(report.skipped.length ? ['Esas canciones ya estaban añadidas.'] : [])].join(' ') || 'No se añadieron canciones.',true);
   } catch(error) {showMusicStatus('No se pudo agregar la música. Comprueba el espacio disponible.',true);}
-  finally {importingMusic=false;$('#addMusicButton').classList.remove('music-loading');libraryInput.value='';updateChoices();}
+  finally {importingMusic=false;libraryInput.disabled=false;$('#addMusicButton').classList.remove('music-loading');libraryInput.value='';}
 });
 function pickMatchTracks() {
   // Prefer uploaded tracks, preventing 404 attempts for built-in MP3s not deployed on GitHub Pages.
   const personal = audioLibrary.getTracks();
   return chooseMusic.value === 'default' || !personal.length ? TRACKS : personal;
 }
+
+function persistMusicSource() {
+  try {localStorage.setItem('sw-music-source',chooseMusic.value);} catch {}
+}
+try {
+  const source=localStorage.getItem('sw-music-source');
+  if(['auto','personal','default'].includes(source)) chooseMusic.value=source;
+  const volume=Number(localStorage.getItem('sw-music-volume'));
+  if(Number.isFinite(volume) && volume>=0 && volume<=100 && localStorage.getItem('sw-music-volume')!==null) music.setVolume(volume/100);
+} catch {}
+chooseMusic.addEventListener('change',persistMusicSource);
+function updateVolume(value) {
+  const percent=Math.max(0,Math.min(100,Number(value)));
+  music.setVolume(percent/100);
+  $('#settingsMusicVolume').value=String(percent);
+  $('#settingsVolumeLabel').textContent=percent+' %';
+  $('#musicVolume').value=String(percent);
+  try {localStorage.setItem('sw-music-volume',String(percent));} catch {}
+}
+$('#settingsMusicVolume').addEventListener('input',e=>updateVolume(e.target.value));
+$('#settingsMusicVolume').value=String(Math.round(music.preferredVolume*100));
+$('#settingsVolumeLabel').textContent=Math.round(music.preferredVolume*100)+' %';
+
+function destroySettingsPreviews() {
+  for(const ctrl of Object.values(settingsPreviews))ctrl?.destroy?.();
+  settingsPreviews={};
+  for(const i of [1,2])$('#touchPreview'+i).replaceChildren();
+}
+function mountSettingsPreviews() {
+  if(!isAndroidApp)return;
+  for(const i of [1,2]){
+    const surface=$('#touchPreview'+i);
+    // A live editable preview shares the same persisted layout used in matches.
+    const ctrl=attachTouchControls({querySelector:()=>surface},i,'joystick',()=>{});
+    ctrl.setEditing(true);
+    settingsPreviews[i]=ctrl;
+    const slider=$('#previewSize'+i),output=$('#previewValue'+i);
+    slider.value=String(Math.round(ctrl.getLayout().scale*100));
+    output.textContent=slider.value+' %';
+    slider.oninput=()=>{output.textContent=Math.round(ctrl.setScale(Number(slider.value)/100)*100)+' %';};
+    $('#previewReset'+i).onclick=()=>{
+      const next=ctrl.resetPlacement();slider.value=String(Math.round(next.scale*100));output.textContent=slider.value+' %';
+    };
+  }
+}
+function openSettings() {
+  toggle($('#settingsModal'),true);
+  toggle($('#androidTouchSettings'),isAndroidApp);
+  $('#settingsMusicVolume').value=String(Math.round(music.preferredVolume*100));
+  $('#settingsVolumeLabel').textContent=Math.round(music.preferredVolume*100)+' %';
+  void loadMusicLibrary();
+  if(isAndroidApp)mountSettingsPreviews();
+}
+function closeSettings() {
+  destroySettingsPreviews();
+  toggle($('#settingsModal'),false);
+}
+$('#sidebarSettings').addEventListener('click',openSettings);
+$('#homeSettingsBtn').addEventListener('click',openSettings);
+$('#settingsDone').addEventListener('click',closeSettings);
+$('#closeSettings').addEventListener('click',closeSettings);
+
 $('#sidebarHelp').addEventListener('click',()=>toggle(help,true));
 $('#sidebarPowerGuide').addEventListener('click',()=>toggle(help,true));
 $('#closeHelp').addEventListener('click',()=>toggle(help,false));
@@ -203,13 +250,13 @@ function buildView(playerId) {
 
 function getCellDims() {return [Math.round(CELL_W*zoom),Math.round(CELL_H*zoom)];}
 function startMatch() {
-  const map=MAPS[selectedMap], seconds=getMatchSeconds();
+  const map=MAPS[selectedMap], seconds=getMatchSeconds(), terrain=selectRandomTerrain();
   if(!Number.isFinite(seconds)||seconds<=0)return;
   toggleLayoutEditor(false);
   for(const control of Object.values(touchControllers))control?.destroy?.();
   touchControllers={1:null,2:null};
-  const battle=new SpreadsheetBattle({size:map.size,seconds,mode:selectedDuration,terrain:selectedTerrain,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
-  session={game:battle,map:selectedMap,terrain:selectedTerrain,duration:selectedDuration,difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
+  const battle=new SpreadsheetBattle({size:map.size,seconds,mode:'bala',terrain,againstComputer:selectedMatch==='ai',difficulty:selectedDifficulty});
+  session={game:battle,map:selectedMap,terrain,duration:'bala',difficulty:selectedDifficulty,match:selectedMatch,views:[],lastMoved:{1:-Infinity,2:-Infinity},aiMemory:{}};
   zoom=isCompactGame() ? .75 : 1;
   $('#zoomRange').value=String(Math.round(zoom*100));$('#zoomLabel').textContent=Math.round(zoom*100)+'%';
   showMinimap(!isCompactGame());
@@ -223,7 +270,7 @@ function startMatch() {
   $('#opponentTag').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniOpponent').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniSize').textContent=`${map.size} × ${map.size}`;
-  $('#currentMode').textContent=`${TERRAINS[selectedTerrain].label.toUpperCase()} · ${map.size} × ${map.size} · ${DURATIONS[selectedDuration].label.toUpperCase()} · ${formatTime(seconds)}`;
+  $('#currentMode').textContent=`${TERRAINS[terrain].label.toUpperCase()} · ${map.size} × ${map.size} · BALA · ${formatTime(seconds)}`;
   $('#matchFormat').textContent=selectedMatch==='ai'?`J1 vs COM · ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2';
   $('#bottomStatus').textContent='Listo · Mueve tu selección para pintar';
   $('.excel-tab.active')?.classList.remove('active');
@@ -233,8 +280,11 @@ function startMatch() {
   lastFrame=performance.now();lastUiDraw=0;
   showToast('Nuevo libro',`${map.label} · ${map.size} × ${map.size} · ${formatTime(seconds)}`);
   updateHUD();
+  music.stop();
   music.tracks = pickMatchTracks();
-  music.start();
+  countdownRemainingMs=3000;pendingStartMusic=false;
+  music.start(); // play in the user's click gesture: browser autoplay stays permitted.
+  toggle($('#countdownOverlay'),true);$('#countdownNumber').textContent='3';
 }
 function safeStartMatch() {
   try {
@@ -261,7 +311,7 @@ $('#layoutClose').addEventListener('click',()=>toggleLayoutEditor(false));
 $('#resumeBtn').addEventListener('click',switchPause);
 $('#musicToggle').addEventListener('click',()=>{ music.setMuted(!music.audio.muted); if (music.active && music.audio.paused && !session?.game.paused) music.resume(); });
 $('#musicNext').addEventListener('click',()=>{ if (session?.game.running && !session.game.paused) music.next(); });
-$('#musicVolume').addEventListener('input',event=>music.setVolume(Number(event.target.value)/100));
+$('#musicVolume').addEventListener('input',event=>updateVolume(event.target.value));
 $$('.excel-tab').forEach(tab=>tab.addEventListener('click',()=>{$$('.excel-tab').forEach(b=>b.classList.toggle('active',b===tab));}));
 $('#zoomRange').addEventListener('input',event=>{zoom=Number(event.target.value)/100;$('#zoomLabel').textContent=event.target.value+'%';});
 
@@ -321,6 +371,7 @@ function toggleLayoutEditor(force){
 }
 
 function returnHome() {
+  countdownRemainingMs=0;pendingStartMusic=false;toggle($('#countdownOverlay'),false);
   toggleLayoutEditor(false);
   for(const control of Object.values(touchControllers))control?.destroy?.();
   touchControllers={1:null,2:null};
@@ -356,11 +407,12 @@ const keyToPlayer = code => code.startsWith('Arrow') ? 1 : ['KeyW','KeyA','KeyS'
 window.addEventListener('keydown',event=>{
   if(event.code==='Escape') {
     if(!help.classList.contains('hidden')) toggle(help,false);
+    else if(!$('#settingsModal').classList.contains('hidden')) closeSettings();
     else if(!setup.classList.contains('hidden')) toggle(setup,false);
     else if(session?.game.running) switchPause();
     event.preventDefault();return;
   }
-  if(!(event.code in DIRECTIONS) || !session || !session.game.running || session.game.paused) return;
+  if(!(event.code in DIRECTIONS) || !session || !session.game.running || session.game.paused || countdownRemainingMs>0) return;
   event.preventDefault();
   const id=keyToPlayer(event.code);
   if(id===2 && session.match==='ai') return;
@@ -381,7 +433,7 @@ window.addEventListener('keyup',event=>{
 });
 
 function attemptMove(playerId,time) {
-  if(!session?.game.running || session.game.paused || layoutEditing) return;
+  if(!session?.game.running || session.game.paused || layoutEditing || countdownRemainingMs>0) return;
   const game=session.game;
   const isAI=playerId===2 && session.match==='ai';
   if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId]) {
@@ -551,7 +603,7 @@ function updateHUD() {
     if(!current.length){const em=document.createElement('span');em.className='no-powerups';em.textContent='✦ Sin habilidades activas';view.abilities.appendChild(em);}
     for(const type of current){
       const pill=document.createElement('span');pill.className='active-powerup';
-      const short=type==='concatenar'?'CONCAT.':type==='promedio'?'PROM.':type==='producto'?'PRODUCTO':type==='indice'?'ÍNDICE':'SUMA';
+      const short=type==='concatenar'?'CONCAT.':type==='promedio'?'PROM.':type==='producto'?'PRODUCTO':type==='buscarv'?'BUSCARV':'SUMA';
       pill.innerHTML=`${POWERUPS[type].icon} ${short} <strong>${game.effectRemaining(view.playerId,type).toFixed(1)}s</strong>`;
       view.abilities.append(pill);
     }
@@ -570,7 +622,7 @@ function handleEvents() {
 }
 function displayResults() {
   if(!session)return;
-  music.stop();
+  music.fadeOut(2700);
   const g=session.game;
   const opponent=session.match==='ai'?'COM':'J2';
   $('#resultsHeading').textContent=g.winner===0?'¡Empate territorial!':g.winner===1?'¡Jugador 1 gana!':session.match==='ai'?'¡Gana la computadora!':'¡Jugador 2 gana!';
@@ -588,12 +640,23 @@ function loop(time) {
   if(!session)return;
   const game=session.game;
   if(game.running && !game.paused && !layoutEditing){
+    if(countdownRemainingMs>0){
+      countdownRemainingMs=Math.max(0,countdownRemainingMs-delta*1000);
+      if(countdownRemainingMs>0)$('#countdownNumber').textContent=String(Math.ceil(countdownRemainingMs/1000));
+      else {
+        toggle($('#countdownOverlay'),false);
+        session.lastMoved={1:-Infinity,2:-Infinity};
+        touchVectors={1:null,2:null};keys.clear();keyOrder={1:[],2:[]};
+        if(pendingStartMusic){pendingStartMusic=false;music.start();}
+      }
+    } else {
     game.advance(delta);
     if(game.running){
       attemptMove(1,time);
       if(session.match==='ai'||keyOrder[2].length||touchVectors[2])attemptMove(2,time);
     }
     handleEvents();
+    }
   }
   if(!game.paused){
     for(const view of session.views)drawSheet(view,delta,time);

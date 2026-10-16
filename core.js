@@ -6,8 +6,7 @@ export const MAPS = Object.freeze({
 });
 
 export const DURATIONS = Object.freeze({
-  bala: {label: 'Bala', seconds: 90},
-  rapida: {label: 'Rápida', seconds: 180}
+  bala: {label: 'Bala', seconds: 90}
 });
 export const TERRAINS = Object.freeze({
   normal: {label:'Normal', description:'Todas las celdas están disponibles.'},
@@ -23,12 +22,12 @@ export const DIFFICULTIES = Object.freeze({
 });
 
 export const POWERUPS = Object.freeze({
-  bomba: { name: 'Bomba de pintura', duration: 0, icon: '✦', description: 'Conquista un área de 7 × 7 celdas.' },
+  insertar: { name: 'INSERTAR', duration: 0, icon: '✦', description: 'Explosión de pintura de 7 × 7 celdas.' },
   suma: { name: 'SUMA', duration: 10, icon: 'Σ', description: 'Pinta 3 celdas por movimiento.' },
-  producto: { name: 'PRODUCTO', duration: 4, icon: '×', description: 'Pinta 9 celdas por movimiento.' },
+  producto: { name: 'PRODUCTO', duration: 4, icon: '×', description: 'Pinta 5 celdas en cruz, a la mitad de velocidad.' },
   promedio: { name: 'PROMEDIO', duration: 6, icon: 'x̄', description: 'Duplica tu velocidad de movimiento.' },
-  concatenar: { name: 'CONCATENAR', duration: 2, icon: '&', description: 'El rival pinta con tu color.' },
-  indice: { name: 'ÍNDICE', duration: 3, icon: '↗', description: 'Te transporta cerca del rival y te devuelve después.' }
+  concatenar: { name: 'CONCATENAR', duration: 1, icon: '&', description: 'El rival pinta con tu color.' },
+  buscarv: { name: 'BUSCARV', duration: 3, icon: '↗', description: 'Te transporta cerca del rival y te devuelve después.' }
 });
 
 export const DIRECTIONS = Object.freeze({
@@ -38,6 +37,12 @@ export const DIRECTIONS = Object.freeze({
 
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 export const mirrorCell = (x, y, size) => ({ x: size - 1 - x, y: size - 1 - y });
+export const selectRandomTerrain = (random = Math.random) => {
+  const terrains=Object.keys(TERRAINS);
+  const n=Number(random());
+  const index=Number.isFinite(n)?Math.min(terrains.length-1,Math.max(0,Math.floor(n*terrains.length))):0;
+  return terrains[index];
+};
 export const columnLabel = (index) => {
   let result = '';
   for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) result = String.fromCharCode(65 + (n - 1) % 26) + result;
@@ -48,7 +53,7 @@ export class SpreadsheetBattle {
   constructor({size = 30, seconds = 90, mode = 'bala', terrain = 'normal', againstComputer = false, difficulty = 'normal', random = Math.random} = {}) {
     if (!Number.isInteger(size) || size < 4 || !Number.isFinite(seconds) || seconds <= 0) throw new Error('Configuración de partida no válida');
     if (!DIFFICULTIES[difficulty]) throw new Error('Dificultad desconocida');
-    if (!DURATIONS[mode] || !TERRAINS[terrain]) throw new Error('Mapa o modo desconocido');
+    if (mode !== 'bala' || seconds !== 90 || !TERRAINS[terrain]) throw new Error('Modo o mapa desconocido: la partida dura 90 segundos');
     this.size = size;
     this.seconds = seconds;
     this.mode = mode;
@@ -66,7 +71,7 @@ export class SpreadsheetBattle {
     this.counts = [size * size, 0, 0];
     this.events = [];
     this.pickups = [];
-    this.nextSpawn = mode === 'rapida' ? 30 : 10;
+    this.nextSpawn = 10;
     this.suddenDeath = false;
     this.pickupId = 0;
     this.players = [
@@ -158,7 +163,8 @@ export class SpreadsheetBattle {
     const cellsPerSecond = this.againstComputer && playerId === 2
       ? DIFFICULTIES[this.difficulty].cellsPerSecond
       : 25;
-    return 1000 / (cellsPerSecond * (this.hasEffect(playerId, 'promedio') ? 2 : 1));
+    const multiplier = (this.hasEffect(playerId, 'promedio') ? 2 : 1) * (this.hasEffect(playerId, 'producto') ? 0.5 : 1);
+    return 1000 / (cellsPerSecond * multiplier);
   }
 
   paintingOwner(playerId) {
@@ -169,7 +175,9 @@ export class SpreadsheetBattle {
     const player = this.players[playerId - 1];
     const color = this.paintingOwner(playerId);
     if (this.hasEffect(playerId, 'producto')) {
-      this.paintArea(player.x, player.y, 1, color);
+      // Cruz de cinco celdas: centro y cuatro vecinos ortogonales.
+      this.paint(player.x, player.y, color);
+      for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) this.paint(player.x+dx, player.y+dy, color);
     } else if (this.hasEffect(playerId, 'suma')) {
       this.paint(player.x, player.y, color);
       // SUMA: three consecutive cells perpendicular to travel.
@@ -210,12 +218,12 @@ export class SpreadsheetBattle {
   activate(playerId, type) {
     if (!(type in POWERUPS)) throw new Error('Power-up desconocido');
     const player = this.players[playerId - 1];
-    if (type === 'bomba') {
+    if (type === 'insertar') {
       const changed = this.paintArea(player.x, player.y, 3, this.paintingOwner(playerId));
       this.events.push({kind: 'bomb', playerId, x: player.x, y: player.y, changed});
       return;
     }
-    if (type === 'indice') {
+    if (type === 'buscarv') {
       // Only the first activation records a return location. Refreshing it extends the visit.
       if (!player.returnPosition) player.returnPosition = {x: player.x, y: player.y};
       const rival = this.players[2 - playerId];
@@ -259,10 +267,9 @@ export class SpreadsheetBattle {
     if (!this.running || this.paused || !Number.isFinite(dt) || dt <= 0) return;
     this.elapsed = Math.min(this.seconds, this.elapsed + dt);
     while (this.nextSpawn <= this.elapsed + 1e-8 && this.nextSpawn < this.seconds) {
-      // Bala: one symmetric pair every 10s, then every 5s during sudden death.
-      // Rápida: three symmetric pairs at once every 30s.
-      for (let n=0;n<(this.mode==='rapida'?3:1);n++)this.spawnMirroredPair();
-      this.nextSpawn += this.mode==='rapida'?30:(this.nextSpawn>=this.seconds-30?5:10);
+      // Bala: una pareja cada 10 s, o cada 5 s en muerte súbita.
+      this.spawnMirroredPair();
+      this.nextSpawn += this.nextSpawn>=this.seconds-30?5:10;
     }
     if(this.mode==='bala' && !this.suddenDeath && this.remaining<=30){
       this.suddenDeath=true;
@@ -272,7 +279,7 @@ export class SpreadsheetBattle {
       this.collapseEverest();this.nextCollapse+=4;
     }
     for (const p of this.players) {
-      if (p.returnPosition && !this.hasEffect(p.id, 'indice')) {
+      if (p.returnPosition && !this.hasEffect(p.id, 'buscarv')) {
         p.x = p.returnPosition.x;
         p.y = p.returnPosition.y;
         p.returnPosition = null;
