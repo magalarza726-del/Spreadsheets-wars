@@ -88,7 +88,7 @@ function updateChoices() {
   }
   const map=MAPS[selectedMap];
   $('#startGame').disabled = false;
-  $('#setupSummary').textContent=`${map.size} × ${map.size} · Mapa aleatorio · 1:30 · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label} (${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s)`:'J1 vs J2 · 25 c/s'}`;
+  $('#setupSummary').textContent=`${map.size} × ${map.size} · ${selectedMatch==='ai'?`COM ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2 · 25 c/s'}`;
 }
 $$('[data-match]').forEach(btn => btn.addEventListener('click',()=>setupMatch(btn.dataset.match)));
 $('#closeSetup').addEventListener('click',()=>toggle(setup,false));
@@ -214,8 +214,8 @@ $('#homeSettingsBtn').addEventListener('click',openSettings);
 $('#settingsDone').addEventListener('click',closeSettings);
 $('#closeSettings').addEventListener('click',closeSettings);
 
-$('#sidebarHelp').addEventListener('click',()=>toggle(help,true));
-$('#sidebarPowerGuide').addEventListener('click',()=>toggle(help,true));
+$('#sidebarHelp')?.addEventListener('click',()=>toggle(help,true));
+$('#sidebarPowerGuide')?.addEventListener('click',()=>toggle(help,true));
 $('#closeHelp').addEventListener('click',()=>toggle(help,false));
 $('#helpOk').addEventListener('click',()=>toggle(help,false));
 
@@ -271,6 +271,7 @@ function startMatch() {
   $('#miniOpponent').textContent=selectedMatch==='ai'?'COM':'J2';
   $('#miniSize').textContent=`${map.size} × ${map.size}`;
   $('#currentMode').textContent=`${TERRAINS[terrain].label.toUpperCase()} · ${map.size} × ${map.size} · BALA · ${formatTime(seconds)}`;
+  $('#countdownMapName').textContent=`MAPA: ${TERRAINS[terrain].label.toUpperCase()}`;
   $('#matchFormat').textContent=selectedMatch==='ai'?`J1 vs COM · ${DIFFICULTIES[selectedDifficulty].label} · ${DIFFICULTIES[selectedDifficulty].cellsPerSecond} c/s`:'J1 vs J2';
   $('#bottomStatus').textContent='Listo · Mueve tu selección para pintar';
   $('.excel-tab.active')?.classList.remove('active');
@@ -436,7 +437,7 @@ function attemptMove(playerId,time) {
   if(!session?.game.running || session.game.paused || layoutEditing || countdownRemainingMs>0) return;
   const game=session.game;
   const isAI=playerId===2 && session.match==='ai';
-  if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId]) {
+  if(!isAI && !keyOrder[playerId].length && !touchVectors[playerId] && !game.hasEffect(playerId,'si_contar')) {
     session.lastMoved[playerId]=-Infinity;
     return;
   }
@@ -445,7 +446,7 @@ function attemptMove(playerId,time) {
   // Handle sub-frame steps (especially PROMEDIO: 20 ms) without skipping any cell.
   let steps=0;
   while(time-session.lastMoved[playerId]>=interval-0.5 && steps<12){
-    const direction=isAI?computerDirection(game):(touchVectors[playerId]||DIRECTIONS[keyOrder[playerId].at(-1)]);
+    const direction=isAI?computerDirection(game):(touchVectors[playerId]||DIRECTIONS[keyOrder[playerId].at(-1)]|| (game.hasEffect(playerId,'si_contar')?[game.players[playerId-1].dx,game.players[playerId-1].dy]:null));
     if(!direction)break;
     const didMove=game.move(playerId,...direction);
     session.lastMoved[playerId]+=interval;
@@ -603,7 +604,7 @@ function updateHUD() {
     if(!current.length){const em=document.createElement('span');em.className='no-powerups';em.textContent='✦ Sin habilidades activas';view.abilities.appendChild(em);}
     for(const type of current){
       const pill=document.createElement('span');pill.className='active-powerup';
-      const short=type==='concatenar'?'CONCAT.':type==='promedio'?'PROM.':type==='producto'?'PRODUCTO':type==='buscarv'?'BUSCARV':'SUMA';
+      const short=type==='concatenar'?'CONCAT.':type==='promedio'?'PROM.':type==='producto'?'PRODUCTO':type==='buscarv'?'BUSCARV':type==='si_contar'?'SI.CONTAR':'SUMA';
       pill.innerHTML=`${POWERUPS[type].icon} ${short} <strong>${game.effectRemaining(view.playerId,type).toFixed(1)}s</strong>`;
       view.abilities.append(pill);
     }
@@ -653,7 +654,7 @@ function loop(time) {
     game.advance(delta);
     if(game.running){
       attemptMove(1,time);
-      if(session.match==='ai'||keyOrder[2].length||touchVectors[2])attemptMove(2,time);
+      if(session.match==='ai'||keyOrder[2].length||touchVectors[2]||game.hasEffect(2,'si_contar'))attemptMove(2,time);
     }
     handleEvents();
     }

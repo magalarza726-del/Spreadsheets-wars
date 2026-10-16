@@ -1,50 +1,33 @@
-# Spreadsheets Wars · V2.0
+# Spreadsheets Wars — V2.1
 
-Juego de conquista territorial inspirado visualmente en una hoja de cálculo. Funciona en GitHub Pages y dentro del APK Android **offline** desde el mismo código base.
+Juego de conquista territorial inspirado en una hoja de cálculo. La misma base JavaScript sirve para GitHub Pages y el APK Android offline.
 
-## Reglas actuales
+## Partida
+- Duración fija de 1:30; muerte súbita durante los últimos 30 segundos, con parejas simétricas de power-ups cada 5 segundos (antes, cada 10).
+- Tamaños de tablero: 30×30, 50×50, 70×70.
+- Mapa sorteado en cada partida: Normal, Everest o Cráter. Las celdas derrumbadas no se pueden cruzar ni pintar.
+- Al iniciar se muestra 3, 2, 1 y el nombre del mapa elegido; al finalizar la música se desvanece durante 2,7 segundos.
+- J1/J2: 25 celdas/s. COM: Fácil 10, Normal 15, Difícil 20 y Experto 25 celdas/s.
 
-- **Partidas de 1:30 exclusivamente**, en tres tamaños independientes: 30×30, 50×50 y 70×70.
-- **El escenario se sortea en cada partida** entre Normal, Everest y Cráter (no es seleccionable). Everest derrumba dos celdas simétricas cada cuatro segundos; Cráter bloquea una X de aproximadamente el 10 % del tablero. Las celdas caídas no pueden atravesarse ni pintarse.
-- **Bala**: una pareja de power-ups simétricos cada 10 segundos. En los últimos 30 segundos comienza **Muerte súbita** y aparecen cada 5 segundos.
-- **Cuenta atrás de 3, 2, 1** antes del primer movimiento, sin consumir tiempo de partida. La música comienza durante esa cuenta atrás.
-- Al terminar, aparece la pantalla de victoria y **la música se difumina durante 2,7 segundos** en lugar de detenerse bruscamente.
+## Power-ups (automáticos al pisar una casilla verde)
+- INSERTAR: explosión 7×7 inmediata.
+- SUMA: tres celdas por paso, 10 segundos.
+- PRODUCTO: exactamente cinco celdas distribuidas en forma de cruz dentro de 5×5 (centro y cuatro extremos), a la mitad de velocidad durante 4 segundos.
+- PROMEDIO: el doble de velocidad durante 6 segundos.
+- CONCATENAR: el rival pinta de tu color durante 1 segundo.
+- BUSCARV: teletransporte temporal cerca del rival, 3 segundos.
+- SI.CONTAR: dash recto a 75 celdas/s durante 0,5 segundos; conserva su rumbo aunque se suelte el control.
 
-## Power-ups (se activan automáticamente)
+## Pantallas
+El lateral del menú solo muestra Inicio y Configuración. Encabezado: «Se conquista celda por celda». En Crear partida se elige únicamente tamaño del tablero y dificultad de COM si corresponde, seguido de la nota con duración fija y mapa aleatorio. En Configuración se personaliza la música y, en Android, el tamaño y la posición de los joysticks.
 
-| Poder | Efecto | Duración |
-| --- | --- | --- |
-| INSERTAR | Explosión de pintura de 7 × 7 celdas | Instantáneo |
-| SUMA | Pinta tres celdas por paso, en línea transversal | 10 s |
-| PRODUCTO | Pinta cinco celdas por paso en cruz y reduce la velocidad a la mitad | 4 s |
-| PROMEDIO | Duplica la velocidad de movimiento | 6 s |
-| CONCATENAR | El rival pinta de tu color | 1 s |
-| BUSCARV | Se transporta cerca del rival y regresa al terminar | 3 s |
+## Web
+GitHub Pages: https://magalarza726-del.github.io/Spreadsheets-wars/
+La versión de escritorio admite flechas para J1 y WASD para J2.
 
-PRODUCTO y PROMEDIO pueden coincidir: **sus efectos de velocidad se compensan** mientras ambos duren. PRODUCTO prevalece sobre SUMA para definir la forma de pintado.
+## Android offline
+El proyecto está en `android/` (Java y Gradle). WebViewAssetLoader sirve los HTML/JS/CSS/MP3 incluidos en el APK sin permiso INTERNET. El user agent `SpreadsheetsWarsAndroid` activa los joysticks en el APK. Al actualizar main, GitHub Actions ejecuta pruebas y compila el nuevo APK. Versión 2.1.
+Las pistas predeterminadas incluidas dependen de cuáles estén presentes en `music/` al momento de compilar.
 
-## Interfaz
-
-La pantalla principal tiene botones **J1 vs J2**, **J1 vs COM**, **Guía de poderes** y **Configuración**. La configuración de partida solamente pide **tamaño del tablero** y, si aplica, **dificultad de COM**. Dificultades COM: Fácil 10, Normal 15, Difícil 20 y Experto 25 celdas/segundo. J1/J2: 25 celdas/segundo.
-
-**Configuración** abre una ventana independiente donde se pueden importar canciones propias, seleccionar música y controlar el volumen. En la **aplicación Android**, también contiene una vista previa para arrastrar el joystick de cada jugador, ajustar tamaño entre el 70 % y el 180 % y restablecer su ubicación. Estas posiciones se guardan localmente.
-
-**GitHub Pages/PC** emplea teclado (flechas J1 y WASD J2) sin opción de panel táctil. El **APK Android** siempre utiliza joystick táctil, con un control por jugador en partidas locales.
-
-## Música
-
-Las canciones oficiales se reproducen aleatoriamente, pasando a otra al terminar sin repetir inmediatamente. El APK integra automáticamente las canciones MP3 que estén presentes en `music/` al momento de compilar. Los archivos musicales personales se conservan localmente cuando el dispositivo admite almacenamiento persistente. El juego funciona aunque alguna pista predeterminada esté ausente.
-
-## GitHub Pages
-
-El sitio funciona directamente en el directorio raíz con `index.html`, `styles.css`, `app.js`, `core.js`, `music.js`, `music-library.js`, `touch-controls.js`, `favicon.svg` y `music/`. No necesita servicios externos. GitHub Pages: `https://magalarza726-del.github.io/Spreadsheets-wars/`.
-
-## Android APK offline
-
-La carpeta `android/` contiene el proyecto Java/Gradle que integra los archivos web mediante **WebViewAssetLoader** y no solicita el permiso INTERNET. Usa WebView local con el agente `SpreadsheetsWarsAndroid` para activar los joysticks solo en el APK.
-
-Cada subida a `main` genera automáticamente el APK con la acción **Build offline Android APK**. Descárgalo desde **Releases** o desde el artefacto del workflow. En Android Studio abre la carpeta `android/` y compila `:app:assembleDebug` (JDK 17 / Android SDK 35).
-
-## Comprobaciones
-
-Desde la raíz ejecuta `npm test` para verificar las reglas, el terreno, la música, la configuración y las regresiones de interfaz. Las fuentes web y las del APK se comparten para que las reglas no diverjan.
+## Pruebas
+Desde el repositorio: `npm test`. Se comprueban las reglas, la UI, la música, la IA y los controles.

@@ -50,7 +50,7 @@ test('SUMA 3 celdas y PRODUCTO 5 celdas',()=>{
   const b=create();b.activate(1,'suma');b.move(1,1,0);
   assert.deepEqual([b.at(2,0),b.at(2,1),b.at(2,2)],[1,1,1]);
   b.activate(1,'producto');b.move(1,1,0);
-  for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]])assert.equal(b.at(3+dx,1+dy),1);
+  for(const [dx,dy] of [[0,0],[-2,0],[2,0],[0,-2],[0,2]]) if(b.inBounds(3+dx,1+dy)) assert.equal(b.at(3+dx,1+dy),1);
   b.advance(4.1);assert.equal(b.hasEffect(1,'producto'),false);
   assert.equal(b.hasEffect(1,'suma'),true);
 });
@@ -154,8 +154,26 @@ test('repertorio de poderes renombrados, CONCATENAR un segundo y mapa aleatorio'
  const {POWERUPS}=await import('../core.js');
  assert.equal(POWERUPS.concatenar.duration,1);
  assert.ok(POWERUPS.insertar && POWERUPS.buscarv);
- assert.equal(Object.keys(POWERUPS).length,6);
+ assert.equal(Object.keys(POWERUPS).length,7);
  assert.equal(selectRandomTerrain(()=>0),'normal');
  assert.equal(selectRandomTerrain(()=>.45),'everest');
  assert.equal(selectRandomTerrain(()=>.99),'crater');
+});
+
+test('PRODUCTO pinta exactamente cinco celdas en patrón 5×5',()=>{
+ const b=create();b.players[0].x=12;b.players[0].y=12;
+ const before=b.counts[1];b.activate(1,'producto');b.paintMovement(1);
+ assert.equal(b.counts[1]-before,5);
+ for(const [dx,dy] of [[0,0],[-2,0],[2,0],[0,-2],[0,2]])assert.equal(b.at(12+dx,12+dy),1);
+ assert.equal(b.at(12+1,12),0);
+});
+test('SI.CONTAR: dash fijo a 75 c/s durante medio segundo, sin girar',()=>{
+ const b=create();b.activate(1,'producto');b.activate(1,'si_contar');
+ assert.equal(b.movementInterval(1),1000/75);
+ const prev={x:b.players[0].x,y:b.players[0].y};
+ b.move(1,0,1);
+ assert.equal(b.players[0].x,prev.x+1);
+ assert.equal(b.players[0].y,prev.y);
+ b.advance(.51);
+ assert.equal(b.movementInterval(1),80);
 });
