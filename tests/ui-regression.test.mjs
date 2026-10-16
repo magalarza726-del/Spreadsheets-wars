@@ -12,7 +12,7 @@ test('la configuración permite los cuatro mapas pero no cambiar tiempo ni joyst
  assert.match(html,/name="terrainChoice" value="everest"/);
  assert.match(html,/name="terrainChoice" value="crater"/);
  assert.match(html,/name="terrainChoice" value="random" checked/);
- assert.match(app,/input\[name="sizeChoice"\], input\[name="difficultyChoice"\]/);
+ assert.match(app,/input\[name="sizeChoice"\], input\[name="terrainChoice"\], input\[name="difficultyChoice"\]/);
 });
 test('inicio con cuenta atrás, aleatoriedad de mapa y versión web actual',()=>{
  assert.match(app,/function safeStartMatch\(\)/);
