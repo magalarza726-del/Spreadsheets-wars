@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SpreadsheetBattle, MAPS, DURATIONS, DIFFICULTIES, mirrorCell, columnLabel, chooseComputerDirection, selectRandomTerrain} from '../core.js';
+import {SpreadsheetBattle, MAPS, DURATIONS, DIFFICULTIES, POWERUPS, mirrorCell, columnLabel, chooseComputerDirection, selectRandomTerrain} from '../core.js';
 
 const create = (settings = {}) => new SpreadsheetBattle({size:30,seconds:90,random:()=>0,...settings});
 
