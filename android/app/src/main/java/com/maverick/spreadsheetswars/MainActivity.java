@@ -154,8 +154,10 @@ public final class MainActivity extends Activity {
         });
         setContentView(frame);
         ViewCompat.requestApplyInsets(frame);
-        if (state != null) webView.restoreState(state);
-        else webView.loadUrl(ENTRY);
+        // Renderer recovery may leave a saved bundle without a restorable
+        // history. Always load the packaged game if restoreState returns null.
+        if (state == null || webView.restoreState(state) == null)
+            webView.loadUrl(ENTRY);
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode,
