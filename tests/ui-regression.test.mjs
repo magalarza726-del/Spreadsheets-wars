@@ -18,7 +18,7 @@ test('inicio con cuenta atrás, aleatoriedad de mapa y versión web actual',()=>
  assert.match(app,/function safeStartMatch\(\)/);
  assert.match(app,/countdownRemainingMs=3000/);
  assert.match(app,/terrain=selectedTerrain==='random'\?selectRandomTerrain\(\):selectedTerrain/);
- assert.match(html,/app\.js\?v=2\.3\.0/);
+ assert.match(html,/app\.js\?v=2\.4\.0/);
 });
 test('la música se difumina al terminar y no se interrumpe de golpe',()=>{
  assert.match(app,/music\.fadeOut\(2700\)/);
@@ -39,4 +39,14 @@ test('la representación de cruce muestra ambos jugadores desplazados visualment
   assert.match(app,/const playersOverlap =/);
   assert.match(app,/const offset=playersOverlap/);
   assert.match(app,/ctx\.arc\(markerX,markerY/);
+});
+
+test('victory dialog scrolls vertically and retains access to the scores and buttons on short phones',()=>{
+  const css=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
+  assert.match(html,/id="resultsModal"/);
+  assert.match(html,/id="resultsHomeBtn"/);
+  assert.match(html,/id="playAgainBtn"/);
+  assert.match(css,/#resultsModal\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(css,/#resultsModal\s*\.results-dialog\s*\{[^}]*margin:\s*auto/s);
+  assert.match(css,/@media \(max-height: 520px\)/);
 });

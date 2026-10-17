@@ -271,3 +271,39 @@ html,body,#app{height:100%;height:100dvh;overscroll-behavior:none}
  .touch-preview-controls .secondary-button{justify-self:start}
  .settings-volume-row{flex-wrap:wrap}
 }
+/* V2.4: scrollable results modal for short landscape Android screens.
+   The dialog remains centered when it fits; otherwise it scrolls from
+   its first line through the buttons, so neither end becomes inaccessible. */
+#resultsModal {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  box-sizing: border-box;
+  min-height: 0;
+  padding:
+    max(12px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+}
+#resultsModal .results-dialog {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: min(420px, 100%);
+  max-width: 100%;
+  max-height: none;
+  margin: auto;
+}
+@media (max-height: 520px) {
+  #resultsModal .results-dialog { padding: 18px 20px; }
+  #resultsModal .results-dialog h2 { font-size: 22px; }
+  #resultsModal .result-trophy { font-size: 30px; margin-top: 5px; }
+  #resultsModal .results-score { margin: 12px 0; padding: 12px 8px; }
+  #resultsModal .results-score strong { font-size: 25px; }
+}

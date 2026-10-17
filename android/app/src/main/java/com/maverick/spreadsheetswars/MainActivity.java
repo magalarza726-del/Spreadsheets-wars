@@ -135,10 +135,10 @@ public final class MainActivity extends Activity {
             }
         });
 
-        // 5 mm of breathing room on ALL sides, plus Android's real
-        // system-bar/display-cutout insets. 5 mm ≈ 0.5 cm as requested.
+        // 2 mm of breathing room on ALL sides, plus Android's real
+        // system-bar/display-cutout insets. Content remains clear of navigation.
         final int edgeMarginPx = Math.round(TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_MM, 5f, getResources().getDisplayMetrics()));
+            TypedValue.COMPLEX_UNIT_MM, 2f, getResources().getDisplayMetrics()));
         FrameLayout frame = new FrameLayout(this);
         frame.setBackgroundColor(0xffeff3f0);
         frame.addView(webView, new FrameLayout.LayoutParams(

@@ -1,4 +1,4 @@
-# Spreadsheets Wars — V2.3
+# Spreadsheets Wars — V2.4
 
 Juego de conquista territorial con estética de hoja de cálculo. La misma base web funciona en GitHub Pages y Android offline.
 
@@ -39,3 +39,10 @@ Código fuente en HTML, CSS y módulos ES JavaScript. Motor independiente del DO
 - Android usa un marco nativo de aproximadamente **5 mm por cada lado**, además del espacio ocupado por barras del sistema y recortes de pantalla. Esto protege los controles frente a la barra de navegación y cámaras.
 - Si Android cierra inesperadamente el proceso de renderización de WebView, la actividad se recupera en lugar de cerrarse por completo (la partida en curso puede reiniciarse).
 - Se mantiene el motor, los cinco power-ups, los tres mapas más Random y la duración de 1:30.
+
+## V2.4 · Android screen margins and scrollable match results
+
+- Shrinks native Android spacing from 5 mm to **2 mm per side**, in addition to real system bar/cutout insets.
+- The victory modal can scroll vertically on short landscape phone screens; both scores and the **Revancha** / **Menú principal** buttons remain reachable.
+- Short-height viewports receive slightly tighter typography and score-card padding; normal-size screens retain their centered results dialog.
+- No gameplay, music or joystick rules were changed.
