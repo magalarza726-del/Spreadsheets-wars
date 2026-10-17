@@ -1,4 +1,4 @@
-# Spreadsheets Wars — V2.2
+# Spreadsheets Wars — V2.3
 
 Juego de conquista territorial con estética de hoja de cálculo. La misma base web funciona en GitHub Pages y Android offline.
 
@@ -30,3 +30,12 @@ Juego de conquista territorial con estética de hoja de cálculo. La misma base 
 ## Desarrollo
 
 Código fuente en HTML, CSS y módulos ES JavaScript. Motor independiente del DOM en `core.js`. Para pruebas usa `npm test`; GitHub Actions publica automáticamente GitHub Pages y compila el APK desde la misma fuente.
+
+
+## V2.3 · Cruce J1/COM y márgenes Android
+
+- Los jugadores pueden encontrarse y cruzarse en la misma celda sin finalizar la partida. En una celda compartida, el último en pasar determina el color y ambos marcadores se dibujan separados.
+- Se añadieron pruebas de colisión, cruces repetidos, recogida de power-ups en celdas compartidas y conteo territorial.
+- Android usa un marco nativo de aproximadamente **5 mm por cada lado**, además del espacio ocupado por barras del sistema y recortes de pantalla. Esto protege los controles frente a la barra de navegación y cámaras.
+- Si Android cierra inesperadamente el proceso de renderización de WebView, la actividad se recupera en lugar de cerrarse por completo (la partida en curso puede reiniciarse).
+- Se mantiene el motor, los cinco power-ups, los tres mapas más Random y la duración de 1:30.

@@ -195,6 +195,11 @@ export class SpreadsheetBattle {
     const x = player.x + dx, y = player.y + dy;
     if (!this.canEnter(x, y)) return false;
     player.x = x; player.y = y;
+    // Sharing a cell is legal: the most recent paint wins. Do not treat
+    // an encounter as a collision with a wall or a game-over condition.
+    const other = this.players[2 - playerId];
+    if (other.x === x && other.y === y)
+      this.events.push({kind:'encounter', playerId, x, y});
     this.paintMovement(playerId);
     this.collect(playerId);
     return true;

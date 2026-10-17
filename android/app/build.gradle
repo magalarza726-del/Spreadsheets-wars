@@ -10,8 +10,8 @@ android {
         applicationId 'com.maverick.spreadsheetswars'
         minSdk 26
         targetSdk 35
-        versionCode 22
-        versionName '2.2.0'
+        versionCode 23
+        versionName '2.3.0'
     }
 
     buildTypes {
@@ -28,6 +28,7 @@ android {
 
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.15.0'
 }
 
 // Keep one authoritative source for GitHub Pages and Android.

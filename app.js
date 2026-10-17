@@ -521,6 +521,9 @@ function drawSheet(view,dt,time) {
     ctx.fillStyle='#eaffef';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`bold ${Math.max(11,Math.min(18,cellH-6))}px Segoe UI`;
     ctx.fillText(POWERUPS[pickup.type].icon,x+cellW/2,y+cellH/2+1);
   }
+  const playersOverlap = game.players.length > 1
+    && game.players[0].x === game.players[1].x
+    && game.players[0].y === game.players[1].y;
   for(const player of game.players){
     const x=ROW_HEADER+player.x*cellW-view.cameraX,y=COL_HEADER+player.y*cellH-view.cameraY;
     if(x+cellW<ROW_HEADER || x>width || y+cellH<COL_HEADER || y>height)continue;
@@ -529,10 +532,14 @@ function drawSheet(view,dt,time) {
     ctx.lineWidth=mine?3:2.2;ctx.strokeStyle=mine?'#107c41':PLAYER_COLORS[player.id];
     ctx.strokeRect(Math.round(x)+1.5,Math.round(y)+1.5,cellW-3,cellH-3);
     if(mine){ctx.fillStyle='#107c41';ctx.fillRect(x+cellW-4,y+cellH-4,6,6);}
-    const circleRadius=Math.min(8,cellH*.36);
-    ctx.beginPath();ctx.fillStyle=PLAYER_COLORS[player.id];ctx.arc(x+cellW/2,y+cellH/2,circleRadius,0,Math.PI*2);ctx.fill();
+    // When players meet, show two distinct markers instead of drawing
+    // them on top of each other (especially important on a tiny phone).
+    const offset=playersOverlap?(player.id===1?-Math.min(10,cellW*.17):Math.min(10,cellW*.17)):0;
+    const markerX=x+cellW/2+offset,markerY=y+cellH/2;
+    const circleRadius=Math.min(playersOverlap?6:8,cellH*.36);
+    ctx.beginPath();ctx.fillStyle=PLAYER_COLORS[player.id];ctx.arc(markerX,markerY,circleRadius,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(player.id===1?'1':'2',x+cellW/2,y+cellH/2+.5);
+    ctx.fillStyle='#fff';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(player.id===1?'1':'2',markerX,markerY+.5);
     ctx.restore();
   }
   ctx.restore();

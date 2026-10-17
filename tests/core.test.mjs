@@ -169,3 +169,52 @@ test('sin dash: se permite girar y se mantiene velocidad base',()=>{
  assert.equal(b.move(1,0,1),true);
  assert.equal(b.players[0].x,1);assert.equal(b.players[0].y,2);
 });
+
+test('J1 y COM pueden compartir exactamente la misma celda sin cerrar partida ni corromper la conquista',()=>{
+  const game=create({againstComputer:true});
+  game.players[0].x=10; game.players[0].y=10;
+  game.players[1].x=12; game.players[1].y=10;
+  assert.equal(game.move(1,1,0),true);
+  assert.equal(game.move(2,-1,0),true);
+  assert.deepEqual([game.players[0].x,game.players[0].y],[11,10]);
+  assert.deepEqual([game.players[1].x,game.players[1].y],[11,10]);
+  assert.equal(game.at(11,10),2); // latest paint wins
+  assert.equal(game.counts.reduce((a,b)=>a+b,0),game.playableCells);
+  assert.equal(game.running,true);
+  assert.equal(game.drainEvents().filter(e=>e.kind==='encounter').length,1);
+  assert.equal(game.move(1,-1,0),true);
+  assert.equal(game.move(2,-1,0),true);
+  assert.equal(game.at(10,10),2);
+  assert.equal(game.counts.reduce((a,b)=>a+b,0),game.playableCells);
+});
+
+test('cruce frontal y repetido en modos Normal, Everest y Cráter no produce excepciones',()=>{
+  for(const terrain of ['normal','everest','crater']) {
+    const game=create({terrain,againstComputer:true,random:()=>0.31});
+    // Move players to two neighboring, nonblocked cells in a safe corner.
+    game.players[0].x=5;game.players[0].y=4;
+    game.players[1].x=6;game.players[1].y=4;
+    for(let i=0;i<120;i++){
+      assert.doesNotThrow(()=>game.move(1,1,0));
+      assert.doesNotThrow(()=>game.move(2,-1,0));
+      assert.doesNotThrow(()=>game.move(1,-1,0));
+      assert.doesNotThrow(()=>game.move(2,1,0));
+      assert.equal(game.counts.reduce((a,b)=>a+b,0),game.playableCells);
+      assert.ok(game.players.every(p=>game.inBounds(p.x,p.y)));
+    }
+    assert.equal(game.running,true);
+  }
+});
+
+test('encuentro con power-up sigue funcionando cuando J1 y COM pisan la misma casilla',()=>{
+  const game=create({againstComputer:true});
+  game.players[0].x=10; game.players[0].y=10;
+  game.players[1].x=12; game.players[1].y=10;
+  game.pickups=[{id:1,x:11,y:10,type:'promedio'}];
+  assert.equal(game.move(1,1,0),true);
+  assert.ok(game.hasEffect(1,'promedio'));
+  assert.equal(game.move(2,-1,0),true);
+  assert.equal(game.pickups.length,0);
+  assert.equal(game.at(11,10),2);
+  assert.equal(game.counts.reduce((a,b)=>a+b,0),game.playableCells);
+});

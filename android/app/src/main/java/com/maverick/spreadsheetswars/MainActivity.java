@@ -4,6 +4,14 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.util.TypedValue;
+import android.widget.FrameLayout;
+import android.widget.Toast;
+import android.webkit.RenderProcessGoneDetail;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -39,6 +47,9 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         getWindow().setStatusBarColor(0xff102d20);
         getWindow().setNavigationBarColor(0xff102d20);
+        // Lay out edge-to-edge and account explicitly for status, navigation
+        // and gesture bars. Without this, Android 15 can obscure controls.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
             .setDomain(LOCAL_HOST)
@@ -88,6 +99,20 @@ public final class MainActivity extends Activity {
                 return !"https".equals(uri.getScheme())
                     || !LOCAL_HOST.equalsIgnoreCase(uri.getHost());
             }
+            @Override public boolean onRenderProcessGone(
+                WebView view, RenderProcessGoneDetail detail) {
+                // Recover the activity instead of letting Android close it
+                // if the system kills the WebView renderer under memory pressure.
+                ViewGroup parent = (ViewGroup) view.getParent();
+                if (parent != null) parent.removeView(view);
+                if (webView == view) webView = null;
+                view.destroy();
+                Toast.makeText(MainActivity.this,
+                    "La pantalla se reinició para recuperar el juego.",
+                    Toast.LENGTH_LONG).show();
+                MainActivity.this.recreate();
+                return true;
+            }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
@@ -110,7 +135,25 @@ public final class MainActivity extends Activity {
             }
         });
 
-        setContentView(webView);
+        // 5 mm of breathing room on ALL sides, plus Android's real
+        // system-bar/display-cutout insets. 5 mm ≈ 0.5 cm as requested.
+        final int edgeMarginPx = Math.round(TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_MM, 5f, getResources().getDisplayMetrics()));
+        FrameLayout frame = new FrameLayout(this);
+        frame.setBackgroundColor(0xffeff3f0);
+        frame.addView(webView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT));
+        ViewCompat.setOnApplyWindowInsetsListener(frame, (view, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            view.setPadding(edgeMarginPx + bars.left, edgeMarginPx + bars.top,
+                edgeMarginPx + bars.right, edgeMarginPx + bars.bottom);
+            return windowInsets;
+        });
+        setContentView(frame);
+        ViewCompat.requestApplyInsets(frame);
         if (state != null) webView.restoreState(state);
         else webView.loadUrl(ENTRY);
     }

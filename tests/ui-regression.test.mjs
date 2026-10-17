@@ -18,7 +18,7 @@ test('inicio con cuenta atrás, aleatoriedad de mapa y versión web actual',()=>
  assert.match(app,/function safeStartMatch\(\)/);
  assert.match(app,/countdownRemainingMs=3000/);
  assert.match(app,/terrain=selectedTerrain==='random'\?selectRandomTerrain\(\):selectedTerrain/);
- assert.match(html,/app\.js\?v=2\.2\.0/);
+ assert.match(html,/app\.js\?v=2\.3\.0/);
 });
 test('la música se difumina al terminar y no se interrumpe de golpe',()=>{
  assert.match(app,/music\.fadeOut\(2700\)/);
@@ -33,4 +33,10 @@ test('menú simplificado y nombre del mapa durante la cuenta atrás',()=>{
  assert.match(app,/countdownMapName/);
  assert.doesNotMatch(html,/PRODUCTO|SI\.CONTAR/);
  assert.doesNotMatch(app,/si_contar|producto/);
+});
+
+test('la representación de cruce muestra ambos jugadores desplazados visualmente',()=>{
+  assert.match(app,/const playersOverlap =/);
+  assert.match(app,/const offset=playersOverlap/);
+  assert.match(app,/ctx\.arc\(markerX,markerY/);
 });
