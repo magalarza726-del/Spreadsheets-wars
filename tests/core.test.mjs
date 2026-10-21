@@ -51,14 +51,14 @@ test('SUMA pinta tres celdas perpendiculares al recorrido',()=>{
   assert.deepEqual([b.at(2,0),b.at(2,1),b.at(2,2)],[1,1,1]);
 });
 
-test('velocidad base 25 celdas/s para ambos jugadores; PROMEDIO 50 celdas/s durante seis segundos',()=>{
+test('velocidad base 25 celdas/s para ambos jugadores; PROMEDIO 50 celdas/s durante cinco segundos',()=>{
   const b=create();
   assert.equal(b.movementInterval(1),40);
   assert.equal(b.movementInterval(2),40);
   b.activate(1,'promedio');
   assert.equal(b.movementInterval(1),20);
   assert.equal(b.movementInterval(2),40);
-  b.advance(6.1);
+  b.advance(5.1);
   assert.equal(b.movementInterval(1),40);
 });
 
@@ -131,7 +131,7 @@ test('COM utiliza 10, 15, 20 y 25 celdas/s según dificultad; sin alterar J1 ni 
     assert.ok(Math.abs(b.movementInterval(2)-(1000/speed))<1e-9);
     b.activate(2,'promedio');
     assert.ok(Math.abs(b.movementInterval(2)-(500/speed))<1e-9);
-    b.advance(6.1);
+    b.advance(5.1);
     assert.ok(Math.abs(b.movementInterval(2)-(1000/speed))<1e-9);
   }
   const pvp = create({difficulty:'principiante'});
@@ -140,10 +140,10 @@ test('COM utiliza 10, 15, 20 y 25 celdas/s según dificultad; sin alterar J1 ni 
   assert.throws(()=>create({againstComputer:true,difficulty:'imposible'}),/Dificultad desconocida/);
 });
 
-test('sin PRODUCTO, PROMEDIO duplica la velocidad y termina a los 6 segundos',()=>{
+test('sin PRODUCTO, PROMEDIO duplica la velocidad y termina a los 5 segundos',()=>{
  const b=create();assert.equal(b.movementInterval(1),40);
  b.activate(1,'promedio');assert.equal(b.movementInterval(1),20);
- b.advance(6.1);assert.equal(b.movementInterval(1),40);
+ b.advance(5.1);assert.equal(b.movementInterval(1),40);
 });
 test('repertorio de poderes renombrados, CONCATENAR un segundo y mapa aleatorio',async()=>{
  const {POWERUPS}=await import('../core.js');
@@ -217,4 +217,29 @@ test('encuentro con power-up sigue funcionando cuando J1 y COM pisan la misma ca
   assert.equal(game.pickups.length,0);
   assert.equal(game.at(11,10),2);
   assert.equal(game.counts.reduce((a,b)=>a+b,0),game.playableCells);
+});
+
+test('SUMA dura cuatro segundos y puede refrescarse al recogerla de nuevo',()=>{
+  const b=create();
+  b.activate(1,'suma');
+  assert.equal(POWERUPS.suma.duration,4);
+  assert.equal(b.hasEffect(1,'suma'),true);
+  b.advance(3.99);
+  assert.equal(b.hasEffect(1,'suma'),true);
+  b.advance(.02);
+  assert.equal(b.hasEffect(1,'suma'),false);
+  b.activate(1,'suma');
+  assert.ok(Math.abs(b.effectRemaining(1,'suma')-4)<1e-8);
+});
+
+test('PROMEDIO dura cinco segundos y vuelve a velocidad base al expirar',()=>{
+  const b=create();
+  b.activate(1,'promedio');
+  assert.equal(POWERUPS.promedio.duration,5);
+  b.advance(4.99);
+  assert.equal(b.hasEffect(1,'promedio'),true);
+  assert.equal(b.movementInterval(1),20);
+  b.advance(.02);
+  assert.equal(b.hasEffect(1,'promedio'),false);
+  assert.equal(b.movementInterval(1),40);
 });

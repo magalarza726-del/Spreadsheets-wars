@@ -23,8 +23,8 @@ export const DIFFICULTIES = Object.freeze({
 
 export const POWERUPS = Object.freeze({
   insertar: { name: 'INSERTAR', duration: 0, icon: '✦', description: 'Explosión de pintura de 7 × 7 celdas.' },
-  suma: { name: 'SUMA', duration: 10, icon: 'Σ', description: 'Pinta 3 celdas por movimiento.' },
-  promedio: { name: 'PROMEDIO', duration: 6, icon: 'x̄', description: 'Duplica tu velocidad de movimiento.' },
+  suma: { name: 'SUMA', duration: 4, icon: 'Σ', description: 'Pinta 3 celdas por movimiento.' },
+  promedio: { name: 'PROMEDIO', duration: 5, icon: 'x̄', description: 'Duplica tu velocidad de movimiento.' },
   concatenar: { name: 'CONCATENAR', duration: 1, icon: '&', description: 'El rival pinta con tu color.' },
   buscarv: { name: 'BUSCARV', duration: 3, icon: '↗', description: 'Te transporta cerca del rival y te devuelve después.' }
 });

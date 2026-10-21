@@ -1,4 +1,4 @@
-# Spreadsheets Wars — V2.5
+# Spreadsheets Wars — V2.6
 
 Juego de conquista territorial con estética de hoja de cálculo. La misma base web funciona en GitHub Pages y Android offline.
 
@@ -12,8 +12,8 @@ Juego de conquista territorial con estética de hoja de cálculo. La misma base 
 ## Power-ups activos (cinco)
 
 - INSERTAR: pintura 7×7 instantánea.
-- SUMA: pinta tres celdas por paso, durante 10 segundos.
-- PROMEDIO: duplica la velocidad durante 6 segundos.
+- SUMA: pinta tres celdas por paso, durante 4 segundos.
+- PROMEDIO: duplica la velocidad durante 5 segundos.
 - CONCATENAR: el rival pinta con tu color durante 1 segundo.
 - BUSCARV: transporta al jugador cerca del rival durante 3 segundos y lo devuelve.
 
@@ -53,3 +53,9 @@ Código fuente en HTML, CSS y módulos ES JavaScript. Motor independiente del DO
 - En **Configuración**, el botón **Intercambiar botones** alterna ambas asignaciones y conserva la elección con localStorage.
 - En J1 vs COM, las teclas de J1 siguen la misma preferencia; COM conserva su movimiento automático.
 - Android sigue usando joystick, sin mostrar la opción de teclado.
+
+## V2.6 · Duración de habilidades
+
+- **SUMA:** 4 segundos de pintado de tres celdas por paso.
+- **PROMEDIO:** 5 segundos de doble velocidad.
+- Las demás habilidades, mapas, modos, controles intercambiables y límites de tiempo permanecen iguales.

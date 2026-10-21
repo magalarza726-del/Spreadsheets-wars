@@ -14,5 +14,5 @@ test('Android leaves 2 mm on every edge in addition to status/navigation/cutout 
 test('Android handles WebView renderer process termination without force closing',()=>{
   assert.match(activity,/onRenderProcessGone\(/);
   assert.match(activity,/MainActivity\.this\.recreate\(\)/);
-  assert.match(gradle,/versionName '2\.5\.0'/);
+  assert.match(gradle,/versionName '2\.6\.0'/);
 });

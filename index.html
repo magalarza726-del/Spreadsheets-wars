@@ -14,7 +14,7 @@
   <section id="homeScreen" class="home-screen" aria-label="Pantalla principal">
     <header class="home-topbar">
       <div class="home-brand"><span class="brand-icon" aria-hidden="true">SW</span><span>Spreadsheets <strong>Wars</strong></span></div>
-      <div class="home-top-actions"><span class="version-tag">EDICIÓN 2.5</span><span class="profile-bubble">SW</span></div>
+      <div class="home-top-actions"><span class="version-tag">EDICIÓN 2.6</span><span class="profile-bubble">SW</span></div>
     </header>
     <div class="home-workspace">
       <aside class="home-sidebar">
@@ -42,8 +42,8 @@
         </div>
         <section class="powerup-home-guide" aria-label="Guía de power-ups"><div class="powerup-guide-heading"><div><span class="eyebrow">CENTRO DE AYUDA · FÓRMULAS</span><h2>Guía de power-ups</h2></div><span class="powerup-guide-caption">Se activan al pisar una casilla verde</span></div><div class="powerup-guide-grid">
 <div><b>✦ INSERTAR</b><span>Explosión 7 × 7 · instantánea</span></div>
-<div><b>Σ SUMA</b><span>3 celdas por paso · 10 s</span></div>
-<div><b>x̄ PROMEDIO</b><span>Velocidad ×2 · 6 s</span></div>
+<div><b>Σ SUMA</b><span>3 celdas por paso · 4 s</span></div>
+<div><b>x̄ PROMEDIO</b><span>Velocidad ×2 · 5 s</span></div>
 <div><b>&amp; CONCATENAR</b><span>Rival pinta tu color · 1 s</span></div>
 <div><b>↗ BUSCARV</b><span>Salto hasta el rival · 3 s</span></div>
 </div></section><div class="home-bottom-row">
@@ -165,8 +165,8 @@
   <div class="modal-layer hidden" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="small-dialog"><div class="pause-emblem">Ⅱ</div><h2 id="pauseHeading">Partida en pausa</h2><p>Tu libro de batalla está esperando. Pulsa Escape o continúa cuando quieras.</p><button type="button" class="primary-button full-width" id="resumeBtn">Reanudar partida →</button><button type="button" class="secondary-button full-width" id="pauseExitBtn">Volver al menú</button></div></div>
 
   <div class="modal-layer hidden" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsHeading"><div class="results-dialog"><span class="result-eyebrow">PARTIDA FINALIZADA</span><div class="result-trophy">✦</div><h2 id="resultsHeading">¡Jugador 1 gana!</h2><p id="resultsSubtitle">El territorio pertenece a quien deja su color.</p><div class="results-score"><div><span class="results-dot blue-dot"></span><strong id="resultScore1">0</strong><small>J1 · celdas</small></div><span class="results-divider">VS</span><div><span class="results-dot orange-dot"></span><strong id="resultScore2">0</strong><small id="resultOpponent">J2 · celdas</small></div></div><div class="results-actions"><button class="primary-button" id="playAgainBtn" type="button">Revancha ↺</button><button class="secondary-button" id="resultsHomeBtn" type="button">Menú principal</button></div></div></div>
-  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p>Consulta tus teclas en Configuración; por defecto WASD.</p></div><div><h3>J2</h3><p>Por defecto flechas; puedes intercambiarlas en Configuración.</p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>INSERTAR</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 10 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 6 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 1 s.</p><p>↗ <b>BUSCARV</b> — salto temporal cerca del rival, 3 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
+  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p>Consulta tus teclas en Configuración; por defecto WASD.</p></div><div><h3>J2</h3><p>Por defecto flechas; puedes intercambiarlas en Configuración.</p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>INSERTAR</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 4 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 5 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 1 s.</p><p>↗ <b>BUSCARV</b> — salto temporal cerca del rival, 3 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
 </div>
-<script type="module" src="./app.js?v=2.5.0"></script>
+<script type="module" src="./app.js?v=2.6.0"></script>
 </body>
 </html>

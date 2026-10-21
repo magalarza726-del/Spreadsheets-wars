@@ -61,8 +61,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-offline-v2.5
-          name: Spreadsheets Wars V2.5 · Android Offline
+          tag_name: android-offline-v2.6
+          name: Spreadsheets Wars V2.6 · Android Offline
           body: |
             Android APK (offline), built from this repository's current GitHub Pages source.
             Music included: every MP3 currently available under music/.

@@ -18,7 +18,7 @@ test('inicio con cuenta atrás, aleatoriedad de mapa y versión web actual',()=>
  assert.match(app,/function safeStartMatch\(\)/);
  assert.match(app,/countdownRemainingMs=3000/);
  assert.match(app,/terrain=selectedTerrain==='random'\?selectRandomTerrain\(\):selectedTerrain/);
- assert.match(html,/app\.js\?v=2\.5\.0/);
+ assert.match(html,/app\.js\?v=2\.6\.0/);
 });
 test('la música se difumina al terminar y no se interrumpe de golpe',()=>{
  assert.match(app,/music\.fadeOut\(2700\)/);
@@ -61,4 +61,10 @@ test('la configuración web intercambia J1 WASD y J2 flechas y actualiza los ró
  assert.match(app,/keyboardPlayer\(code,keyboardSwapped\)/);
  assert.match(app,/toggle\(\$\('#keyboardSettings'\),!isAndroidApp\)/);
  assert.match(app,/keyboardLabel\(playerId,keyboardSwapped\)/);
+});
+
+test('la pantalla principal y la ayuda muestran las duraciones actuales de los poderes',()=>{
+ assert.match(html,/<b>Σ SUMA<\/b><span>3 celdas por paso · 4 s<\/span>/);
+ assert.match(html,/<b>x̄ PROMEDIO<\/b><span>Velocidad ×2 · 5 s<\/span>/);
+ assert.doesNotMatch(html,/3 celdas, 10 s|velocidad doble, 6 s/);
 });
