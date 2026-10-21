@@ -1,4 +1,4 @@
-# Spreadsheets Wars — V2.4
+# Spreadsheets Wars — V2.5
 
 Juego de conquista territorial con estética de hoja de cálculo. La misma base web funciona en GitHub Pages y Android offline.
 
@@ -21,7 +21,7 @@ Juego de conquista territorial con estética de hoja de cálculo. La misma base 
 
 ## Plataformas
 
-- **GitHub Pages:** teclado (flechas J1, WASD J2); sin necesidad de servidor para desplegar el juego.
+- **GitHub Pages:** por defecto J1 (izquierda) usa WASD y J2 (derecha) usa flechas. En Configuración → «Intercambiar botones» puedes invertir ambos esquemas; queda guardado en el navegador.
 - **APK Android offline:** joystick táctil configurable por jugador y música empaquetada desde `music/*.mp3`. No necesita internet para jugar.
 - J1 vs COM conserva estrategias y velocidades Fácil 10 c/s, Normal 15 c/s, Difícil 20 c/s, Experto 25 c/s. Velocidad humana 25 c/s.
 - Menú con Inicio y Configuración. La cuenta atrás 3, 2, 1 anuncia el mapa finalmente elegido, incluso con Random.
@@ -46,3 +46,10 @@ Código fuente en HTML, CSS y módulos ES JavaScript. Motor independiente del DO
 - The victory modal can scroll vertically on short landscape phone screens; both scores and the **Revancha** / **Menú principal** buttons remain reachable.
 - Short-height viewports receive slightly tighter typography and score-card padding; normal-size screens retain their centered results dialog.
 - No gameplay, music or joystick rules were changed.
+
+## V2.5 · Teclados intercambiables (GitHub Pages)
+
+- Por defecto **J1 WASD** y **J2 flechas**, incluidos los rótulos dentro de las hojas.
+- En **Configuración**, el botón **Intercambiar botones** alterna ambas asignaciones y conserva la elección con localStorage.
+- En J1 vs COM, las teclas de J1 siguen la misma preferencia; COM conserva su movimiento automático.
+- Android sigue usando joystick, sin mostrar la opción de teclado.

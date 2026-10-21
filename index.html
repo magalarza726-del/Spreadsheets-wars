@@ -14,7 +14,7 @@
   <section id="homeScreen" class="home-screen" aria-label="Pantalla principal">
     <header class="home-topbar">
       <div class="home-brand"><span class="brand-icon" aria-hidden="true">SW</span><span>Spreadsheets <strong>Wars</strong></span></div>
-      <div class="home-top-actions"><span class="version-tag">EDICIÓN 2.4</span><span class="profile-bubble">SW</span></div>
+      <div class="home-top-actions"><span class="version-tag">EDICIÓN 2.5</span><span class="profile-bubble">SW</span></div>
     </header>
     <div class="home-workspace">
       <aside class="home-sidebar">
@@ -31,13 +31,13 @@
             <span class="mode-card-art art-versus"><span class="art-grid"></span><span class="art-left">J1</span><span class="art-vs">VS</span><span class="art-right">J2</span></span>
             <span class="mode-label"><strong>J1 vs J2</strong><span class="card-arrow">↗</span></span>
             <span class="mode-copy">Dos jugadores · Pantalla dividida verticalmente</span>
-            <span class="mode-foot"><span class="mini-pill">LOCAL</span> <span>Flechas + W A S D</span></span>
+            <span class="mode-foot"><span class="mini-pill">LOCAL</span> <span id="pvpKeyboardSummary">W A S D + ↑ ← ↓ →</span></span>
           </button>
           <button type="button" class="mode-card" data-match="ai">
             <span class="mode-card-art art-computer"><span class="art-grid"></span><span class="art-left">J1</span><span class="art-vs">VS</span><span class="art-right art-robot">COM</span></span>
             <span class="mode-label"><strong>J1 vs COM</strong><span class="card-arrow">↗</span></span>
             <span class="mode-copy">Un jugador · Una pantalla con rival automático</span>
-            <span class="mode-foot"><span class="mini-pill">SOLO</span> <span>Teclas de dirección</span></span>
+            <span class="mode-foot"><span class="mini-pill">SOLO</span> <span id="aiKeyboardSummary">J1: W A S D</span></span>
           </button>
         </div>
         <section class="powerup-home-guide" aria-label="Guía de power-ups"><div class="powerup-guide-heading"><div><span class="eyebrow">CENTRO DE AYUDA · FÓRMULAS</span><h2>Guía de power-ups</h2></div><span class="powerup-guide-caption">Se activan al pisar una casilla verde</span></div><div class="powerup-guide-grid">
@@ -48,7 +48,7 @@
 <div><b>↗ BUSCARV</b><span>Salto hasta el rival · 3 s</span></div>
 </div></section><div class="home-bottom-row">
           <div class="tip-card"><div class="tip-icon">✦</div><div><strong>Las fórmulas ahora se encuentran en el mapa</strong><p>Los poderes aparecen por parejas simétricas cada 10 segundos y cada 5 durante la muerte súbita. Atraviésalos para activarlos automáticamente.</p></div></div>
-          <div class="keyboard-guide"><strong>Controles rápidos</strong><div><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span>J1</span></div><div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>J2</span></div></div>
+          <div class="keyboard-guide"><strong>Controles rápidos</strong><div id="keyboardGuide1"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>J1</span></div><div id="keyboardGuide2"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span>J2</span></div></div>
         </div>
       </main>
     </div>
@@ -132,7 +132,17 @@
 
   <div class="modal-layer hidden" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
     <div class="setup-dialog settings-dialog"><div class="modal-header"><div><span class="eyebrow">PREFERENCIAS</span><h2 id="settingsHeading">⚙ Configuración</h2></div><button type="button" class="icon-button" id="closeSettings" aria-label="Cerrar configuración">×</button></div>
-      <p class="modal-description">Personaliza la música y, en Android, la ubicación y tamaño de tus joysticks.</p>
+      <p class="modal-description">Personaliza los controles y la música de tu dispositivo.</p>
+      <section id="keyboardSettings" class="keyboard-settings hidden" aria-label="Intercambiar teclas de J1 y J2">
+        <div class="dialog-label">CONTROLES DE TECLADO · GITHUB PAGES</div>
+        <div class="keyboard-assignment" aria-live="polite">
+          <div class="keyboard-player-box"><span>J1 · Pantalla izquierda</span><strong id="keyboardPlayerOne">W A S D</strong></div>
+          <span class="keyboard-swap-symbol" aria-hidden="true">⇄</span>
+          <div class="keyboard-player-box"><span>J2 · Pantalla derecha</span><strong id="keyboardPlayerTwo">↑ ← ↓ →</strong></div>
+        </div>
+        <button type="button" class="secondary-button keyboard-swap-btn" id="swapKeyboardBtn" aria-pressed="true">⇄ Intercambiar botones</button>
+        <p class="settings-description">Por defecto: J1 usa WASD y J2 las flechas. Pulsa para intercambiarlos; se guarda automáticamente en este navegador.</p>
+      </section>
       <section id="androidTouchSettings" class="android-touch-settings hidden" aria-label="Configurar joystick para Android">
         <div class="dialog-label">JOYSTICK TÁCTIL · ANDROID</div>
         <p class="settings-description">En el APK el joystick siempre está activo. Arrastra el control verde en cada recuadro, cambia su tamaño o restablece su posición.</p>
@@ -155,8 +165,8 @@
   <div class="modal-layer hidden" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="small-dialog"><div class="pause-emblem">Ⅱ</div><h2 id="pauseHeading">Partida en pausa</h2><p>Tu libro de batalla está esperando. Pulsa Escape o continúa cuando quieras.</p><button type="button" class="primary-button full-width" id="resumeBtn">Reanudar partida →</button><button type="button" class="secondary-button full-width" id="pauseExitBtn">Volver al menú</button></div></div>
 
   <div class="modal-layer hidden" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsHeading"><div class="results-dialog"><span class="result-eyebrow">PARTIDA FINALIZADA</span><div class="result-trophy">✦</div><h2 id="resultsHeading">¡Jugador 1 gana!</h2><p id="resultsSubtitle">El territorio pertenece a quien deja su color.</p><div class="results-score"><div><span class="results-dot blue-dot"></span><strong id="resultScore1">0</strong><small>J1 · celdas</small></div><span class="results-divider">VS</span><div><span class="results-dot orange-dot"></span><strong id="resultScore2">0</strong><small id="resultOpponent">J2 · celdas</small></div></div><div class="results-actions"><button class="primary-button" id="playAgainBtn" type="button">Revancha ↺</button><button class="secondary-button" id="resultsHomeBtn" type="button">Menú principal</button></div></div></div>
-  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></p></div><div><h3>J2</h3><p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>INSERTAR</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 10 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 6 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 1 s.</p><p>↗ <b>BUSCARV</b> — salto temporal cerca del rival, 3 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
+  <div class="modal-layer hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpHeading"><div class="setup-dialog help-dialog"><div class="modal-header"><div><span class="eyebrow">GUÍA RÁPIDA</span><h2 id="helpHeading">Cómo jugar</h2></div><button class="icon-button" type="button" id="closeHelp">×</button></div><p>Recorre las celdas para pintarlas de tu color. También puedes apropiarte de una celda pintada por el rival. Gana quien controle más casillas al llegar a cero.</p><div class="help-columns"><div><h3>J1</h3><p>Consulta tus teclas en Configuración; por defecto WASD.</p></div><div><h3>J2</h3><p>Por defecto flechas; puedes intercambiarlas en Configuración.</p></div></div><div class="power-help"><h3>Power-ups automáticos</h3><p>✦ <b>INSERTAR</b> — 7×7 instantáneo.</p><p>Σ <b>SUMA</b> — 3 celdas, 10 s.</p><p>x̄ <b>PROMEDIO</b> — velocidad doble, 6 s.</p><p>&amp; <b>CONCATENAR</b> — el rival pinta de tu color, 1 s.</p><p>↗ <b>BUSCARV</b> — salto temporal cerca del rival, 3 s.</p></div><button class="primary-button full-width" id="helpOk" type="button">Entendido</button></div></div>
 </div>
-<script type="module" src="./app.js?v=2.4.0"></script>
+<script type="module" src="./app.js?v=2.5.0"></script>
 </body>
 </html>

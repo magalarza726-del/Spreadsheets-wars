@@ -2,6 +2,7 @@ import {SpreadsheetBattle, MAPS, DURATIONS, TERRAINS, DIFFICULTIES, POWERUPS, DI
 import {BattleMusic, TRACKS} from './music.js';
 import {AudioLibrary} from './music-library.js';
 import {attachTouchControls} from './touch-controls.js';
+import {keyboardPlayer, keyboardLabel, loadKeyboardSwap, saveKeyboardSwap} from './keyboard-controls.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -38,6 +39,8 @@ const mobileInput = window.matchMedia('(pointer: coarse)');
 // Only the packaged Android APK uses touch controls; browser/PC uses keyboard.
 const isAndroidApp = /SpreadsheetsWarsAndroid/.test(navigator.userAgent);
 const selectedTouch = isAndroidApp ? 'joystick' : 'none';
+// Web: J1 uses WASD and J2 uses arrows by default. Android retains its joystick setup.
+let keyboardSwapped = isAndroidApp ? false : loadKeyboardSwap();
 let countdownRemainingMs = 0;
 let pendingStartMusic = false;
 let settingsPreviews = {};
@@ -177,6 +180,39 @@ $('#settingsMusicVolume').addEventListener('input',e=>updateVolume(e.target.valu
 $('#settingsMusicVolume').value=String(Math.round(music.preferredVolume*100));
 $('#settingsVolumeLabel').textContent=Math.round(music.preferredVolume*100)+' %';
 
+function updateKeyboardLabels() {
+  const left=keyboardLabel(1,keyboardSwapped), right=keyboardLabel(2,keyboardSwapped);
+  $('#keyboardPlayerOne').textContent=left;
+  $('#keyboardPlayerTwo').textContent=right;
+  $('#swapKeyboardBtn').setAttribute('aria-pressed',String(keyboardSwapped));
+  $('#pvpKeyboardSummary').textContent=`${left} + ${right}`;
+  $('#aiKeyboardSummary').textContent=`J1: ${left}`;
+  const labels=[{id:1,keys:left},{id:2,keys:right}];
+  for(const item of labels){
+    const guide=$('#keyboardGuide'+item.id);
+    guide.replaceChildren();
+    const codes=item.keys.split(' ');
+    for(const key of codes){
+      const kbd=document.createElement('kbd');kbd.textContent=key;guide.append(kbd);
+    }
+    const name=document.createElement('span');name.textContent='J'+item.id;guide.append(name);
+  }
+  if(session){
+    for(const view of session.views){
+      const slot=$('.player-controls',view.pane);
+      if(slot)slot.textContent=session.match==='ai'&&view.playerId===2?'Rival automático':keyboardLabel(view.playerId,keyboardSwapped);
+    }
+  }
+}
+$('#swapKeyboardBtn').addEventListener('click',()=>{
+  if(isAndroidApp)return;
+  keyboardSwapped=saveKeyboardSwap(!keyboardSwapped);
+  keys.clear();keyOrder={1:[],2:[]};
+  if(session)session.lastMoved={1:-Infinity,2:-Infinity};
+  updateKeyboardLabels();
+});
+updateKeyboardLabels();
+
 function destroySettingsPreviews() {
   for(const ctrl of Object.values(settingsPreviews))ctrl?.destroy?.();
   settingsPreviews={};
@@ -202,6 +238,8 @@ function mountSettingsPreviews() {
 function openSettings() {
   toggle($('#settingsModal'),true);
   toggle($('#androidTouchSettings'),isAndroidApp);
+  toggle($('#keyboardSettings'),!isAndroidApp);
+  updateKeyboardLabels();
   $('#settingsMusicVolume').value=String(Math.round(music.preferredVolume*100));
   $('#settingsVolumeLabel').textContent=Math.round(music.preferredVolume*100)+' %';
   void loadMusicLibrary();
@@ -226,7 +264,7 @@ function buildView(playerId) {
   pane.className = 'sheet-view';
   const isComputer = session.game.againstComputer && playerId === 2;
   const label = isComputer ? 'COM' : `J${playerId}`;
-  pane.innerHTML = `<div class="player-bar"><div class="player-identity"><span class="player-chip ${playerId===2?'orange':''}">${label}</span><span class="player-controls">${playerId===1?'↑ ← ↓ →':isComputer?'Rival automático':'W A S D'}</span></div><div class="active-powerups" aria-label="Habilidades activas"></div></div><div class="sheet-surface"><canvas class="sheet-canvas" aria-label="Hoja de cálculo del jugador ${label}"></canvas><div class="sheet-scrollhint"><div class="scroll-marker"></div></div></div>`;
+  pane.innerHTML = `<div class="player-bar"><div class="player-identity"><span class="player-chip ${playerId===2?'orange':''}">${label}</span><span class="player-controls">${isComputer?'Rival automático':keyboardLabel(playerId,keyboardSwapped)}</span></div><div class="active-powerups" aria-label="Habilidades activas"></div></div><div class="sheet-surface"><canvas class="sheet-canvas" aria-label="Hoja de cálculo del jugador ${label}"></canvas><div class="sheet-scrollhint"><div class="scroll-marker"></div></div></div>`;
   playArea.appendChild(pane);
   if(selectedTouch!=='none')touchControllers[playerId]=attachTouchControls(pane,playerId,selectedTouch,vector=>{
     touchVectors[playerId]=vector;
@@ -406,7 +444,7 @@ function showToast(title,sub='',type='') {
   const timeout=setTimeout(()=>wrapper.remove(),3100);toasts.push(timeout);
 }
 
-const keyToPlayer = code => code.startsWith('Arrow') ? 1 : ['KeyW','KeyA','KeyS','KeyD'].includes(code) ? 2 : 0;
+const keyToPlayer = code => keyboardPlayer(code,keyboardSwapped);
 window.addEventListener('keydown',event=>{
   if(event.code==='Escape') {
     if(!help.classList.contains('hidden')) toggle(help,false);

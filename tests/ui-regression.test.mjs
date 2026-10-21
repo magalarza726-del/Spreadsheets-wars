@@ -18,7 +18,7 @@ test('inicio con cuenta atrás, aleatoriedad de mapa y versión web actual',()=>
  assert.match(app,/function safeStartMatch\(\)/);
  assert.match(app,/countdownRemainingMs=3000/);
  assert.match(app,/terrain=selectedTerrain==='random'\?selectRandomTerrain\(\):selectedTerrain/);
- assert.match(html,/app\.js\?v=2\.4\.0/);
+ assert.match(html,/app\.js\?v=2\.5\.0/);
 });
 test('la música se difumina al terminar y no se interrumpe de golpe',()=>{
  assert.match(app,/music\.fadeOut\(2700\)/);
@@ -49,4 +49,16 @@ test('victory dialog scrolls vertically and retains access to the scores and but
   assert.match(css,/#resultsModal\s*\{[^}]*overflow-y:\s*auto/s);
   assert.match(css,/#resultsModal\s*\.results-dialog\s*\{[^}]*margin:\s*auto/s);
   assert.match(css,/@media \(max-height: 520px\)/);
+});
+
+test('la configuración web intercambia J1 WASD y J2 flechas y actualiza los rótulos',()=>{
+ assert.match(html,/id="keyboardSettings"/);
+ assert.match(html,/id="swapKeyboardBtn"/);
+ assert.match(html,/id="keyboardPlayerOne">W A S D/);
+ assert.match(html,/id="keyboardPlayerTwo">↑ ← ↓ →/);
+ assert.match(app,/let keyboardSwapped = isAndroidApp \? false : loadKeyboardSwap\(\)/);
+ assert.match(app,/keyboardSwapped=saveKeyboardSwap\(!keyboardSwapped\)/);
+ assert.match(app,/keyboardPlayer\(code,keyboardSwapped\)/);
+ assert.match(app,/toggle\(\$\('#keyboardSettings'\),!isAndroidApp\)/);
+ assert.match(app,/keyboardLabel\(playerId,keyboardSwapped\)/);
 });

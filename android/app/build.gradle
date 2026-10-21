@@ -10,8 +10,8 @@ android {
         applicationId 'com.maverick.spreadsheetswars'
         minSdk 26
         targetSdk 35
-        versionCode 24
-        versionName '2.4.0'
+        versionCode 25
+        versionName '2.5.0'
     }
 
     buildTypes {
@@ -38,6 +38,7 @@ def syncOfflineAssets = tasks.register('syncOfflineAssets', Copy) {
     from(rootProject.projectDir.parentFile) {
         include 'index.html', 'styles.css', 'app.js', 'core.js',
                 'music.js', 'music-library.js', 'touch-controls.js',
+                'keyboard-controls.js',
                 'favicon.svg', 'music/*.mp3'
     }
     into 'src/main/assets'

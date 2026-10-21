@@ -307,3 +307,21 @@ html,body,#app{height:100%;height:100dvh;overscroll-behavior:none}
   #resultsModal .results-score { margin: 12px 0; padding: 12px 8px; }
   #resultsModal .results-score strong { font-size: 25px; }
 }
+
+/* V2.5: reversible keyboard assignments, available on GitHub Pages only */
+.keyboard-settings{margin:0 0 18px;padding:14px;border:1px solid #d5e7db;background:#f0f8f3;border-radius:10px}
+.keyboard-settings .dialog-label{margin:0 0 10px}
+.keyboard-assignment{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:9px}
+.keyboard-player-box{min-width:0;display:flex;flex-direction:column;gap:6px;background:white;border:1px solid #d8e8dd;padding:10px 12px;border-radius:8px}
+.keyboard-player-box span{font-size:11px;color:#53735f}
+.keyboard-player-box strong{color:#12663e;font-size:16px;letter-spacing:1px;white-space:nowrap}
+.keyboard-swap-symbol{font-size:23px;color:#128045;font-weight:800}
+.keyboard-swap-btn{margin:12px 0 4px;padding:9px 12px;cursor:pointer}
+.keyboard-settings .settings-description{margin:5px 0 0}
+@media(max-width:500px){
+ .keyboard-settings{padding:10px}
+ .keyboard-assignment{gap:5px}
+ .keyboard-player-box{padding:9px 6px}
+ .keyboard-player-box strong{font-size:12px;letter-spacing:0}
+ .keyboard-player-box span{font-size:10px}
+}
